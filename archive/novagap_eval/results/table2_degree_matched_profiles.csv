@@ -1,0 +1,10 @@
+cutoff,cohort_variant,n_pairs,pool_size,deg_u_mean,deg_u_median,deg_v_mean,deg_v_median,deg_prod_mean,deg_prod_median,git_commit,snapshot_date
+2016,Positives (Realized Novel Pairs),500,500,89.638,47.0,511.99,324.0,55715.732,15052.0,e9b1c053dce1ab6cf99129d3f8ba2ec8545ee637,2026-10-11
+2016,Negatives (Restricted to Test Window),500,9554,87.676,45.5,498.47,317.5,52649.686,15384.5,e9b1c053dce1ab6cf99129d3f8ba2ec8545ee637,2026-10-11
+2016,Negatives (Unrestricted Concept Graph),500,17612,86.74,46.5,501.44,320.0,51877.008,15084.0,e9b1c053dce1ab6cf99129d3f8ba2ec8545ee637,2026-10-11
+2018,Positives (Realized Novel Pairs),500,500,125.338,75.5,701.04,460.0,102329.692,34403.0,e9b1c053dce1ab6cf99129d3f8ba2ec8545ee637,2026-10-11
+2018,Negatives (Restricted to Test Window),500,11109,124.264,74.5,689.41,454.0,99299.008,34336.5,e9b1c053dce1ab6cf99129d3f8ba2ec8545ee637,2026-10-11
+2018,Negatives (Unrestricted Concept Graph),500,22258,122.402,73.0,687.318,455.0,96768.458,34189.5,e9b1c053dce1ab6cf99129d3f8ba2ec8545ee637,2026-10-11
+2020,Positives (Realized Novel Pairs),500,500,132.292,73.0,857.91,562.0,132476.66,44764.0,e9b1c053dce1ab6cf99129d3f8ba2ec8545ee637,2026-10-11
+2020,Negatives (Restricted to Test Window),500,11925,129.196,70.0,845.102,572.0,127893.97,44220.0,e9b1c053dce1ab6cf99129d3f8ba2ec8545ee637,2026-10-11
+2020,Negatives (Unrestricted Concept Graph),500,25709,129.354,71.5,838.45,547.0,127664.806,41897.0,e9b1c053dce1ab6cf99129d3f8ba2ec8545ee637,2026-10-11

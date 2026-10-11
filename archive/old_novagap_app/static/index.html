@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NovaGap – Novelty & Gap-Filling Engine</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #38bdf8;
+      --accent2: #a78bfa;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --success: #4ade80;
+      --warn: #fbbf24;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+    header { text-align: center; margin-bottom: 2.5rem; }
+    h1 {
+      font-size: 2.2rem;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.4rem;
+    }
+    .subtitle { color: var(--muted); font-size: 1.05rem; }
+    .badge {
+      display: inline-block;
+      background: rgba(56,189,248,0.15);
+      color: var(--accent);
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      margin-top: 0.8rem;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 1.8rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+      border: 1px solid rgba(148,163,184,0.12);
+    }
+    label { display: block; font-weight: 600; margin-bottom: 0.4rem; color: var(--accent); }
+    input[type=text], textarea {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      color: var(--text);
+      font-size: 1rem;
+      margin-bottom: 1.3rem;
+      transition: border 0.2s;
+    }
+    input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    textarea { min-height: 140px; resize: vertical; }
+    button {
+      background: linear-gradient(90deg, #0ea5e9, #8b5cf6);
+      color: white;
+      border: none;
+      padding: 0.95rem 2rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(14,165,233,0.35); }
+    .examples { margin-top: 2rem; }
+    .examples h3 { color: var(--muted); font-size: 0.95rem; margin-bottom: 0.7rem; }
+    .ex-btn {
+      display: inline-block;
+      background: #334155;
+      color: var(--text);
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      margin: 0.25rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: 1px solid #475569;
+    }
+    .ex-btn:hover { background: #475569; }
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>NovaGap</h1>
+      <p class="subtitle">Literature-Grounded Multi-Source Novelty Assessment & Gap-Filling Engine</p>
+      <span class="badge">Papers + GitHub · Explainable Score · Research Gaps · Improved Ideas</span>
+    </header>
+
+    <div class="card">
+      <form action="/analyze" method="post">
+        <label for="title">Project Title</label>
+        <input type="text" id="title" name="title" required
+               placeholder="e.g. AI-powered student project novelty checker using multi-source retrieval"/>
+
+        <label for="abstract">Short Abstract / Proposal</label>
+        <textarea id="abstract" name="abstract" required
+                  placeholder="Describe the problem, your approach, and what you think is new..."></textarea>
+
+        <button type="submit">Analyze Novelty & Find Gaps</button>
+      </form>
+
+      <div class="examples">
+        <h3>Try a sample idea</h3>
+        <span class="ex-btn" onclick="fillSample(1)">Basic Novelty Checker</span>
+        <span class="ex-btn" onclick="fillSample(2)">Multi-source + Gap Filling</span>
+        <span class="ex-btn" onclick="fillSample(3)">LLM Idea Generator</span>
+      </div>
+    </div>
+
+    <footer>
+      Thiagarajar College of Engineering · Department of Computer Science and Business Systems<br>
+      SRIPATHIRAJAN V & CHANDRU M · Guide: Mrs S.Sugantha
+    </footer>
+  </div>
+
+  <script>
+    const samples = {
+      1: {
+        title: "A simple web tool that searches Google Scholar and GitHub for similar student projects",
+        abstract: "Students enter a project title. The system queries Google Scholar and GitHub and shows a list of similar works. It calculates a basic keyword overlap score and tells the student if the idea is novel or not. No advanced embeddings or gap analysis is performed."
+      },
+      2: {
+        title: "NovaGap: Literature-Grounded Multi-Source Novelty Assessment with Automatic Research Gap Identification and Idea Enhancement",
+        abstract: "We propose a system that accepts a student project idea, retrieves related academic papers (arXiv) and open-source repositories (GitHub), computes semantic similarity using Sentence-BERT embeddings, produces an explainable novelty score, extracts concrete research gaps with evidence, and generates improved project variants that fill those gaps while remaining feasible for academic timelines."
+      },
+      3: {
+        title: "Autonomous LLM agent that generates novel research ideas from literature",
+        abstract: "An agent that reads recent papers, generates research ideas, and ranks them by novelty using an LLM judge. No external retrieval grounding or multi-source code check is performed."
+      }
+    };
+    function fillSample(id) {
+      document.getElementById('title').value = samples[id].title;
+      document.getElementById('abstract').value = samples[id].abstract;
+      document.querySelector('form').submit();
+    }
+  </script>
+</body>
+</html>

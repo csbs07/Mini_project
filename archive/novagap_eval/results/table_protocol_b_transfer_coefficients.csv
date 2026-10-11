@@ -1,0 +1,9 @@
+model,feature,coef_beta,std_err,git_commit,snapshot_date
+Matched-Fit Ref Baseline (Calipers),Intercept,-0.00927101560959543,0.158,8e6d8635a8bf77f5679a41c5d1edae65847ea5ec,2026-10-11
+Matched-Fit Ref Baseline (Calipers),rn_aa,6.716282276952346,0.4737,8e6d8635a8bf77f5679a41c5d1edae65847ea5ec,2026-10-11
+Matched-Fit Ref Baseline (Calipers),rn_log_du,-4.3985096667687715,0.3983,8e6d8635a8bf77f5679a41c5d1edae65847ea5ec,2026-10-11
+Matched-Fit Ref Baseline (Calipers),rn_log_dv,-2.3419656626820218,0.297,8e6d8635a8bf77f5679a41c5d1edae65847ea5ec,2026-10-11
+Natural-Fit Ref Baseline (Protocol B),Intercept,-12.837120365677833,0.2529967105491456,8e6d8635a8bf77f5679a41c5d1edae65847ea5ec,2026-10-11
+Natural-Fit Ref Baseline (Protocol B),rn_aa,7.50346874805414,0.2924520276187081,8e6d8635a8bf77f5679a41c5d1edae65847ea5ec,2026-10-11
+Natural-Fit Ref Baseline (Protocol B),rn_log_du,3.6105323222178307,0.18976941704337336,8e6d8635a8bf77f5679a41c5d1edae65847ea5ec,2026-10-11
+Natural-Fit Ref Baseline (Protocol B),rn_log_dv,3.834371928558186,0.1994299238331109,8e6d8635a8bf77f5679a41c5d1edae65847ea5ec,2026-10-11

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NovaGap Report</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #38bdf8;
+      --accent2: #a78bfa;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --green: #4ade80;
+      --yellow: #fbbf24;
+      --red: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: var(--text);
+      line-height: 1.65;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 1.7rem; color: var(--accent); margin-bottom: 0.3rem; }
+    h2 {
+      font-size: 1.25rem;
+      color: var(--accent2);
+      margin: 2rem 0 0.8rem;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 0.35rem;
+    }
+    .score-box {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0;
+    }
+    .score-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 1.3rem 1.6rem;
+      flex: 1;
+      min-width: 180px;
+      text-align: center;
+      border: 1px solid #334155;
+    }
+    .score-value {
+      font-size: 2.6rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .interp {
+      background: #1e293b;
+      border-left: 4px solid var(--accent);
+      padding: 1rem 1.2rem;
+      border-radius: 0 10px 10px 0;
+      margin: 1rem 0;
+    }
+    .item {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.8rem;
+      border: 1px solid #334155;
+    }
+    .item .sim {
+      float: right;
+      background: #0f172a;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+    .gap { border-left: 4px solid var(--yellow); }
+    .gap.high { border-left-color: var(--red); }
+    .idea { border-left: 4px solid var(--green); }
+    .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      margin-right: 0.4rem;
+      background: #334155;
+    }
+    .tag.high { background: #7f1d1d; color: #fecaca; }
+    .tag.medium { background: #78350f; color: #fde68a; }
+    .tag.low { background: #14532d; color: #bbf7d0; }
+    a { color: var(--accent); }
+    .back {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .back:hover { color: var(--accent); }
+    ul { margin-left: 1.3rem; margin-top: 0.4rem; }
+    .method {
+      font-size: 0.9rem;
+      color: var(--muted);
+      background: #1e293b;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1.5rem;
+    }
+    pre, .lit {
+      white-space: pre-wrap;
+      font-size: 0.92rem;
+      background: #1e293b;
+      padding: 1rem;
+      border-radius: 10px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="/">← New Analysis</a>
+    <h1>Novelty Report</h1>
+    <p style="color:var(--muted)">{{ report.input_title }}</p>
+
+    <div class="score-box">
+      <div class="score-card">
+        <div class="score-value">{{ report.novelty_score }}</div>
+        <div>Novelty Score (0–100)</div>
+      </div>
+      <div class="score-card">
+        <div class="score-value">{{ report.similarity_score }}</div>
+        <div>Max Similarity Signal</div>
+      </div>
+    </div>
+
+    <div class="interp">
+      <strong>Interpretation:</strong> {{ report.interpretation }}
+    </div>
+
+    <h2>Research Gaps Identified</h2>
+    {% for g in report.research_gaps %}
+    <div class="item gap {{ g.severity }}">
+      <span class="tag {{ g.severity }}">{{ g.severity|upper }}</span>
+      {{ g.description }}
+      <ul>
+        {% for e in g.evidence %}
+        <li style="color:var(--muted);font-size:0.9rem">{{ e }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+
+    <h2>Improved Project Ideas (Gap-Filling)</h2>
+    {% for idea in report.improved_ideas %}
+    <div class="item idea">
+      <strong>{{ idea.title }}</strong>
+      <span class="tag {{ idea.estimated_feasibility }}">Feasibility: {{ idea.estimated_feasibility }}</span>
+      <p style="margin-top:0.5rem">{{ idea.description }}</p>
+      <p style="margin-top:0.5rem;color:var(--muted)"><em>How it fills gaps:</em></p>
+      <ul>
+        {% for h in idea.how_it_fills_gaps %}
+        <li>{{ h }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+
+    <h2>Top Similar Papers</h2>
+    {% for p in report.top_similar_papers %}
+    <div class="item">
+      <span class="sim">sim {{ '%.2f'|format(p.similarity) }}</span>
+      <strong>{{ p.title }}</strong>
+      {% if p.year %}<span class="tag">{{ p.year }}</span>{% endif %}
+      <span class="tag">{{ p.source }}</span>
+      <p style="margin-top:0.4rem;font-size:0.92rem;color:var(--muted)">{{ p.abstract_or_description[:280] }}...</p>
+      {% if p.url %}<a href="{{ p.url }}" target="_blank">Open</a>{% endif %}
+    </div>
+    {% endfor %}
+
+    <h2>Top Similar Repositories</h2>
+    {% for r in report.top_similar_repos %}
+    <div class="item">
+      <span class="sim">sim {{ '%.2f'|format(r.similarity) }}</span>
+      <strong>{{ r.title }}</strong>
+      {% if r.extra.stars %}<span class="tag">★ {{ r.extra.stars }}</span>{% endif %}
+      <span class="tag">{{ r.source }}</span>
+      <p style="margin-top:0.4rem;font-size:0.92rem;color:var(--muted)">{{ r.abstract_or_description[:220] }}...</p>
+      {% if r.url %}<a href="{{ r.url }}" target="_blank">Open</a>{% endif %}
+    </div>
+    {% endfor %}
+
+    <h2>Literature Survey Summary</h2>
+    <div class="lit">{{ report.literature_survey_summary }}</div>
+
+    <h2>References</h2>
+    <ul>
+      {% for ref in report.references %}
+      <li style="margin-bottom:0.35rem">{{ ref }}</li>
+      {% endfor %}
+    </ul>
+
+    <div class="method">
+      <strong>Method notes:</strong> {{ report.method_notes }}
+    </div>
+  </div>
+</body>
+</html>
