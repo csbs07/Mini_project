@@ -36,3 +36,13 @@ In accordance with academic journal and conference disclosure policies, this doc
   - Built comprehensive test suite (`tests/test_fulltext.py`) passing 16/16 tests with 0 ruff errors.
   - Conducted end-to-end evaluation across 3 sample ideas (64.4% full-text coverage, 8.95s mean ingestion time, 0 extraction failures) and prepared 15 manual spot-check items in `tests/spotcheck.md`.
 - **Human oversight:** User specified functional constraints, Groq API correction, and strict preservation of benchmark study code and preregistration files.
+
+### 2026-10-12: Full-Text Reader Enhancement & Cost Removal (`chatbot-fulltext`)
+- **Role:** Antigravity Coding Agent.
+- **Assistance provided:**
+  - Removed cost meter, cost caps, and cost reporting from UI and server endpoints.
+  - Resolved publisher HTTP 403 / Cloudflare download blocks by enhancing multi-source legal OA candidate URL extraction with PMC/Europe PMC and open repository prioritization.
+  - Implemented automatic abstract indexing fallback so all retrieved papers remain queryable and grounded in chat even when full text downloads are blocked by publisher paywalls.
+  - Built an in-app Paper Reader modal with page-by-page extracted text, embedded PDF viewer, rich abstract view, and 1-click external browser link to original papers.
+  - Upgraded PDF upload handler to auto-refresh session papers and immediately launch the reader view upon upload.
+- **Human oversight:** User requested removal of cost display, reported 403 download error and upload flow friction, and verified resolved reading experience.

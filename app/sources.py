@@ -1,4 +1,4 @@
-"""Legal open-access PDF resolution and source discovery."""
+"""Legal open-access PDF resolution and multi-source fallback discovery."""
 import re
 from typing import Any
 
@@ -7,23 +7,19 @@ import requests
 
 def extract_arxiv_id(paper: dict[str, Any]) -> str | None:
     """Extract an arXiv ID from paper metadata (ids, doi, url, or primary_location)."""
-    # 1. Direct IDs dictionary
     ids = paper.get("ids", {})
     if isinstance(ids, dict):
         arxiv_id = ids.get("arxiv")
         if arxiv_id:
-            # Clean arXiv prefix if present
             clean = re.sub(r"^https?://arxiv\.org/abs/", "", arxiv_id)
             clean = re.sub(r"^arxiv:", "", clean, flags=re.IGNORECASE)
             return clean.strip()
 
-    # 2. Check DOI for arXiv: 10.48550/arXiv.XXXX.XXXXX
     doi = paper.get("doi") or ""
     match = re.search(r"10\.48550/arXiv\.([0-9]+\.[0-9]+(?:v[0-9]+)?)", doi, re.IGNORECASE)
     if match:
         return match.group(1)
 
-    # 3. Check paper landing page URL or primary_location
     url = paper.get("url") or ""
     match = re.search(r"arxiv\.org/(?:abs|pdf)/([0-9]+\.[0-9]+(?:v[0-9]+)?)", url, re.IGNORECASE)
     if match:
@@ -57,62 +53,147 @@ def fetch_semantic_scholar_oa_pdf(doi_or_title: str) -> str | None:
     return None
 
 
-def find_pdf_source(paper: dict[str, Any]) -> tuple[str | None, str, str | None]:
-    """
-    Find a legal open access PDF URL in the required priority order:
-    1. OpenAlex best_oa_location.pdf_url
-    2. open_access.oa_url
-    3. other OA locations
-    4. arXiv PDF if an arXiv id exists
-    5. Semantic Scholar openAccessPdf if available
-    6. Paywalled or no OA copy: status 'abstract_only' with a reason.
+def normalize_pdf_url(url: str) -> str | None:
+    """Ensure URL is https and valid."""
+    if not url or not isinstance(url, str):
+        return None
+    cleaned = url.strip()
+    if cleaned.startswith("http://"):
+        cleaned = "https://" + cleaned[7:]
+    if not cleaned.startswith("https://"):
+        return None
+    return cleaned
 
-    Returns:
-        (pdf_url, status, reason)
-        where status is 'oa_available' or 'abstract_only'
-    """
-    # 1. OpenAlex best_oa_location.pdf_url
-    best_oa = paper.get("best_oa_location")
-    if isinstance(best_oa, dict):
-        pdf_url = best_oa.get("pdf_url")
-        if pdf_url and pdf_url.startswith("https://"):
-            return pdf_url, "oa_available", "openalex_best_oa"
 
-    # 2. open_access.oa_url
-    oa_info = paper.get("open_access", {})
-    if isinstance(oa_info, dict):
-        oa_url = oa_info.get("oa_url")
-        if oa_url and oa_url.startswith("https://"):
-            if oa_url.lower().endswith(".pdf") or "/pdf/" in oa_url.lower():
-                return oa_url, "oa_available", "openalex_oa_url"
-
-    # 3. Other OA locations in locations list
+def extract_pmc_id(paper: dict[str, Any]) -> str | None:
+    """Extract PMC ID from paper metadata or locations."""
     locations = paper.get("locations") or []
     if isinstance(locations, list):
         for loc in locations:
-            if isinstance(loc, dict) and loc.get("is_oa"):
-                pdf_url = loc.get("pdf_url")
-                if pdf_url and pdf_url.startswith("https://"):
-                    return pdf_url, "oa_available", "openalex_location"
+            loc_id = str(loc.get("id") or "")
+            match = re.search(r"pubmedcentral\.nih\.gov:([0-9]+)", loc_id)
+            if match:
+                return match.group(1)
+            landing = str(loc.get("landing_page_url") or "")
+            match = re.search(r"ncbi\.nlm\.nih\.gov/pmc/articles/(?:PMC)?([0-9]+)", landing)
+            if match:
+                return match.group(1)
 
-    # 4. arXiv PDF if an arXiv ID exists
+    ids = paper.get("ids", {})
+    if isinstance(ids, dict):
+        pmcid = ids.get("pmcid")
+        if pmcid:
+            clean = re.sub(r"^https?://(?:www\.)?ncbi\.nlm\.nih\.gov/pmc/articles/", "", pmcid)
+            clean = re.sub(r"^PMC", "", clean, flags=re.IGNORECASE).strip()
+            return clean
+
+    return None
+
+
+def get_candidate_pdf_urls(paper: dict[str, Any]) -> list[str]:
+    """
+    Collect all possible legal open-access PDF candidate URLs in priority order:
+    1. arXiv direct PDF (if arXiv ID exists)
+    2. BioRxiv / MedRxiv direct PDF
+    3. Institutional / open repository locations (Zenodo, HAL, OSF, .edu, .ac.uk)
+    4. PubMed Central mirrors
+    5. OpenAlex best_oa_location.pdf_url
+    6. Other OpenAlex locations with pdf_url
+    7. Semantic Scholar openAccessPdf
+    8. open_access.oa_url (if direct PDF)
+    """
+    candidates: list[str] = []
+
+    # 1. arXiv direct PDF
     arxiv_id = extract_arxiv_id(paper)
     if arxiv_id:
-        return f"https://arxiv.org/pdf/{arxiv_id}.pdf", "oa_available", "arxiv"
+        candidates.append(f"https://arxiv.org/pdf/{arxiv_id}.pdf")
 
-    # 5. Semantic Scholar openAccessPdf if available
+    # 2. PubMed Central direct PDF if PMC ID exists
+    pmc_num = extract_pmc_id(paper)
+    if pmc_num:
+        epmc_url = f"https://europepmc.org/backend/ptpmcrender.fcgi?accid=PMC{pmc_num}&blobtype=pdf"
+        pmc_url = f"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmc_num}/pdf/"
+        for u in [epmc_url, pmc_url]:
+            if u not in candidates:
+                candidates.append(u)
+
+    # 3. Separate locations: prioritize open repositories before commercial publishers
+    locations = paper.get("locations") or []
+    repo_cands: list[str] = []
+    publisher_cands: list[str] = []
+
+    if isinstance(locations, list):
+        for loc in locations:
+            if isinstance(loc, dict):
+                p_url = normalize_pdf_url(loc.get("pdf_url"))
+                if not p_url:
+                    continue
+                p_url_lower = p_url.lower()
+                # Check if from a commercial publisher with bot protection
+                is_commercial = any(
+                    dom in p_url_lower
+                    for dom in [
+                        "academic.oup.com",
+                        "springer.com",
+                        "sciencedirect.com",
+                        "wiley.com",
+                        "nature.com",
+                        "tandfonline.com",
+                        "ieee.org",
+                    ]
+                )
+                if is_commercial:
+                    if p_url not in publisher_cands:
+                        publisher_cands.append(p_url)
+                else:
+                    if p_url not in repo_cands:
+                        repo_cands.append(p_url)
+
+    # Add open repository candidates first
+    for r_url in repo_cands:
+        if r_url not in candidates:
+            candidates.append(r_url)
+
+    # 4. OpenAlex best_oa_location.pdf_url
+    best_oa = paper.get("best_oa_location")
+    if isinstance(best_oa, dict):
+        b_url = normalize_pdf_url(best_oa.get("pdf_url"))
+        if b_url and b_url not in candidates:
+            candidates.append(b_url)
+
+    # 5. Publisher candidates
+    for p_url in publisher_cands:
+        if p_url not in candidates:
+            candidates.append(p_url)
+
+    # 6. Semantic Scholar openAccessPdf
     doi = paper.get("doi")
     if doi:
-        # Strip https://doi.org/
         clean_doi = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", doi)
-        s2_url = fetch_semantic_scholar_oa_pdf(clean_doi)
-        if s2_url:
-            return s2_url, "oa_available", "semantic_scholar"
+        s2_url = normalize_pdf_url(fetch_semantic_scholar_oa_pdf(clean_doi))
+        if s2_url and s2_url not in candidates:
+            candidates.append(s2_url)
 
-    # 6. Fallback: Paywalled or no OA copy
-    is_oa = False
+    # 7. open_access.oa_url if direct PDF
+    oa_info = paper.get("open_access", {})
     if isinstance(oa_info, dict):
-        is_oa = oa_info.get("is_oa", False)
+        oa_url = normalize_pdf_url(oa_info.get("oa_url"))
+        if oa_url and (oa_url.lower().endswith(".pdf") or "/pdf/" in oa_url.lower()):
+            if oa_url not in candidates:
+                candidates.append(oa_url)
+
+    return candidates
+
+
+def find_pdf_source(paper: dict[str, Any]) -> tuple[str | None, str, str | None]:
+    """Find a legal open access PDF URL in required priority order."""
+    candidates = get_candidate_pdf_urls(paper)
+    if candidates:
+        return candidates[0], "oa_available", "open_access_found"
+
+    oa_info = paper.get("open_access", {})
+    is_oa = oa_info.get("is_oa", False) if isinstance(oa_info, dict) else False
 
     if not is_oa:
         return None, "abstract_only", "Paywalled (no legal open-access version found)"

@@ -2,11 +2,11 @@
 import json
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from .config import BASE_DIR, CHAT_SESSION_COST_CAP_USD
+from .config import BASE_DIR
 from .openalex import search_openalex_papers
 from .service import ChatService
 
@@ -100,10 +100,10 @@ async def api_read_top5(req: ReadTop5Request):
 @app.post("/api/papers/upload")
 async def api_upload_paper(
     session_id: str = Form(...),
-    paper_id: str = Form(...),
+    paper_id: str = Form("new"),
     file: UploadFile = File(...),
 ):
-    """Attach user PDF to a paper P# (e.g. for paywalled paper)."""
+    """Attach user PDF to a paper P# or upload a new PDF into the session pool."""
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
@@ -112,15 +112,40 @@ async def api_upload_paper(
         raise HTTPException(status_code=400, detail="Uploaded file exceeds 30 MB limit")
 
     try:
+        clean_name = file.filename.rsplit(".", 1)[0]
         res = service.ingest_paper(
             session_id=session_id,
             paper_id=paper_id,
             pdf_bytes_override=pdf_bytes,
             is_user_upload=True,
         )
+        # Update title with uploaded filename if it's a new upload
+        session, _ = service.get_or_create_session(session_id)
+        norm_id = res.get("paper_id")
+        if norm_id and norm_id in session.papers and "Uploaded Paper" in session.papers[norm_id].get("title", ""):
+            session.papers[norm_id]["title"] = clean_name
         return res
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/papers/{paper_id}/text")
+async def api_get_paper_text(paper_id: str, session_id: str = "default"):
+    """Fetch full extracted pages, abstract, and sections so the user can read the paper."""
+    return service.get_paper_reader_data(session_id, paper_id)
+
+
+@app.get("/api/papers/{paper_id}/pdf")
+async def api_get_paper_pdf(paper_id: str, session_id: str = "default"):
+    """Stream raw PDF for in-browser PDF viewer."""
+    pdf_bytes = service.get_paper_pdf_bytes(session_id, paper_id)
+    if not pdf_bytes:
+        raise HTTPException(status_code=404, detail="PDF not found or not yet ingested")
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "inline; filename=paper.pdf"},
+    )
 
 
 @app.post("/api/chat/stream")
@@ -143,12 +168,10 @@ async def api_chat_stream(req: ChatRequest, request: Request):
 
 @app.get("/api/session/{session_id}")
 async def api_get_session(session_id: str):
-    """Get current session status, papers, upload count, and total cost."""
+    """Get current session status, papers, and upload count."""
     session, _ = service.get_or_create_session(session_id)
     return {
         "session_id": session_id,
-        "total_cost_usd": round(session.total_cost_usd, 4),
-        "cost_cap_usd": CHAT_SESSION_COST_CAP_USD,
         "upload_count": session.upload_count,
         "papers": list(session.papers.values()),
     }

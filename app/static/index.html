@@ -22,7 +22,7 @@
       --warning: #f59e0b;
       --danger: #ef4444;
       --badge-bg: #1e293b;
-      --drawer-width: 420px;
+      --drawer-width: 440px;
     }
 
     * {
@@ -43,7 +43,7 @@
 
     /* Header */
     header {
-      background: rgba(18, 24, 36, 0.85);
+      background: rgba(18, 24, 36, 0.95);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--surface-border);
       padding: 12px 24px;
@@ -88,27 +88,14 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 14px;
-    }
-
-    .cost-badge {
-      background: #1e293b;
-      border: 1px solid #334155;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-family: 'JetBrains Mono', monospace;
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      gap: 12px;
     }
 
     .btn {
       background: var(--surface);
       color: var(--text);
       border: 1px solid var(--surface-border);
-      padding: 6px 14px;
+      padding: 7px 14px;
       border-radius: 6px;
       font-size: 13px;
       font-weight: 500;
@@ -135,6 +122,17 @@
       border-color: var(--primary-hover);
     }
 
+    .btn-success {
+      background: #059669;
+      border-color: #059669;
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      background: #047857;
+      border-color: #047857;
+    }
+
     /* Main Container */
     .app-body {
       display: flex;
@@ -146,7 +144,7 @@
 
     /* Sidebar / Papers Panel */
     .sidebar {
-      width: 420px;
+      width: 440px;
       background: var(--surface);
       border-right: 1px solid var(--surface-border);
       display: flex;
@@ -157,12 +155,14 @@
     .sidebar-header {
       padding: 16px;
       border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .search-box {
       display: flex;
       gap: 8px;
-      margin-bottom: 12px;
     }
 
     .search-input {
@@ -184,6 +184,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
 
     .pool-title {
@@ -252,6 +253,8 @@
       justify-content: space-between;
       padding-top: 8px;
       border-top: 1px solid #1e293b;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .status-badge {
@@ -280,7 +283,7 @@
 
     .btn-xs {
       font-size: 11px;
-      padding: 2px 8px;
+      padding: 3px 8px;
       border-radius: 4px;
     }
 
@@ -458,7 +461,7 @@
       margin-bottom: 8px;
     }
 
-    /* Passage Drawer */
+    /* Supporting Passage Drawer */
     .passage-drawer {
       position: absolute;
       top: 0;
@@ -521,6 +524,184 @@
       line-height: 1.6;
       color: #e2e8f0;
     }
+
+    /* Full Paper Text Reader Modal */
+    .reader-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .reader-modal.active {
+      display: flex;
+    }
+
+    .reader-content {
+      width: 90%;
+      max-width: 1050px;
+      height: 90%;
+      background: #101623;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .reader-header {
+      padding: 14px 20px;
+      background: #162032;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .reader-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .reader-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f8fafc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .reader-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reader-tabs {
+      display: flex;
+      background: #0b0f17;
+      padding: 3px;
+      border-radius: 6px;
+      border: 1px solid #1e293b;
+      gap: 4px;
+    }
+
+    .reader-tab-btn {
+      background: transparent;
+      color: #94a3b8;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .reader-tab-btn.active {
+      background: #1e293b;
+      color: #38bdf8;
+    }
+
+    .reader-body {
+      padding: 24px 32px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      line-height: 1.7;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    .reader-banner {
+      background: rgba(30, 41, 59, 0.7);
+      border-left: 4px solid #38bdf8;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #cbd5e1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .reader-abstract-card {
+      background: #0b0f17;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .reader-meta-row {
+      font-size: 12px;
+      color: #94a3b8;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 12px;
+    }
+
+    .reader-page-card {
+      background: #0b0f17;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .reader-page-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      font-weight: 600;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 6px;
+    }
+
+    .reader-pdf-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #1e293b;
+      border-radius: 6px;
+    }
+
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #0284c7;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
   </style>
 </head>
 <body>
@@ -535,7 +716,7 @@
       <span>Full-Text Literature Exploration</span>
     </div>
     <div class="header-actions">
-      <div class="cost-badge" id="costBadge">Cost: $0.00 / $1.00</div>
+      <button class="btn btn-success" id="uploadAnyPdfBtn">📁 Upload PDF</button>
       <button class="btn" id="exportChatBtn">Export Chat</button>
       <button class="btn btn-primary" id="newSessionBtn">New Session</button>
     </div>
@@ -553,12 +734,14 @@
         </div>
         <div class="pool-actions">
           <div class="pool-title">Retrieved Papers (<span id="paperCount">0</span>)</div>
-          <button class="btn btn-xs" id="readTop5Btn">Read Top 5</button>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn btn-xs" id="readTop5Btn">Read Top 5</button>
+          </div>
         </div>
       </div>
       <div class="papers-list" id="papersList">
         <div style="color: var(--text-muted); font-size: 13px; text-align: center; margin-top: 40px;">
-          Search an idea or keywords to load relevant OpenAlex papers.
+          Search an idea or keywords to load OpenAlex papers, or click <strong>Upload PDF</strong> above.
         </div>
       </div>
     </div>
@@ -573,7 +756,7 @@
       <div class="messages-area" id="messagesArea">
         <div class="msg msg-assistant">
           <div class="msg-bubble">
-            Welcome to LitSearch. Enter a research idea on the left to find top open-access papers. Once loaded, you can ask questions about methodologies, datasets, architectures, and results. Citations will link directly to verified supporting passages.
+            Welcome to LitSearch. Search for an idea on the left or upload any local PDF paper using the <strong>Upload PDF</strong> button above. Once loaded, click <strong>Read</strong> to ingest full text, or click <strong>📖 Read Full Text</strong> on any paper card to read its extracted pages directly.
           </div>
         </div>
       </div>
@@ -625,6 +808,36 @@
 
   </div>
 
+  <!-- Full Paper Reader Modal -->
+  <div class="reader-modal" id="readerModal">
+    <div class="reader-content">
+      <div class="reader-header">
+        <div class="reader-header-left">
+          <span class="paper-label" id="readerPaperLabel">P1</span>
+          <div class="reader-title" id="readerPaperTitle">Paper Title</div>
+        </div>
+        <div class="reader-header-actions">
+          <div class="reader-tabs" id="readerTabs" style="display: none;">
+            <button class="reader-tab-btn active" id="tabExtractedTextBtn" onclick="switchReaderTab('text')">📝 Extracted Text</button>
+            <button class="reader-tab-btn" id="tabPdfViewerBtn" onclick="switchReaderTab('pdf')">📄 PDF View</button>
+          </div>
+          <a class="btn btn-xs" id="readerExtLinkBtn" href="#" target="_blank" rel="noopener noreferrer" style="display: none;">🔗 Open PDF ↗</a>
+          <button class="btn btn-xs btn-primary" id="readerUploadBtn" onclick="triggerReaderUpload()" title="Upload a local PDF file for this paper">📁 Upload PDF</button>
+          <button class="btn btn-xs" id="closeReaderBtn">✕ Close</button>
+        </div>
+      </div>
+      <div class="reader-body" id="readerBody">
+        Loading paper text...
+      </div>
+      <div class="reader-body" id="readerPdfBody" style="display: none; padding: 0;">
+        <iframe class="reader-pdf-frame" id="readerPdfFrame" src=""></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-msg" id="toastMsg"></div>
+
   <!-- Hidden File Input for PDF Upload -->
   <input type="file" id="pdfFileInput" accept="application/pdf" style="display: none;">
 
@@ -641,20 +854,25 @@
     const chatInput = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendMessageBtn');
     const charCounter = document.getElementById('charCounter');
-    const costBadge = document.getElementById('costBadge');
     const progressIndicator = document.getElementById('progressIndicator');
     const progressText = document.getElementById('progressText');
     const pdfFileInput = document.getElementById('pdfFileInput');
     const passageDrawer = document.getElementById('passageDrawer');
     const closeDrawerBtn = document.getElementById('closeDrawerBtn');
 
-    // Drawer elements
-    const drawerPaperLabel = document.getElementById('drawerPaperLabel');
-    const drawerPaperTitle = document.getElementById('drawerPaperTitle');
-    const drawerPage = document.getElementById('drawerPage');
-    const drawerSection = document.getElementById('drawerSection');
-    const drawerPassageText = document.getElementById('drawerPassageText');
-    const drawerPaperLink = document.getElementById('drawerPaperLink');
+    // Reader Modal
+    const readerModal = document.getElementById('readerModal');
+    const closeReaderBtn = document.getElementById('closeReaderBtn');
+    const readerPaperLabel = document.getElementById('readerPaperLabel');
+    const readerPaperTitle = document.getElementById('readerPaperTitle');
+    const readerBody = document.getElementById('readerBody');
+    const toastMsg = document.getElementById('toastMsg');
+
+    function showToast(text, duration = 3500) {
+      toastMsg.textContent = text;
+      toastMsg.style.display = 'block';
+      setTimeout(() => { toastMsg.style.display = 'none'; }, duration);
+    }
 
     // Char counter
     chatInput.addEventListener('input', () => {
@@ -682,9 +900,19 @@
       });
     });
 
-    // Close Drawer
+    // Close Drawers
     closeDrawerBtn.addEventListener('click', () => {
       passageDrawer.classList.remove('open');
+    });
+
+    closeReaderBtn.addEventListener('click', () => {
+      readerModal.classList.remove('active');
+    });
+
+    // Upload Any PDF Button
+    document.getElementById('uploadAnyPdfBtn').addEventListener('click', () => {
+      pendingUploadPaperId = "new";
+      pdfFileInput.click();
     });
 
     // Search Papers
@@ -712,6 +940,38 @@
       }
     }
 
+    let activeReaderPaperId = null;
+    let activeReaderLabel = null;
+    const readerTabs = document.getElementById('readerTabs');
+    const tabExtractedTextBtn = document.getElementById('tabExtractedTextBtn');
+    const tabPdfViewerBtn = document.getElementById('tabPdfViewerBtn');
+    const readerPdfBody = document.getElementById('readerPdfBody');
+    const readerPdfFrame = document.getElementById('readerPdfFrame');
+    const readerExtLinkBtn = document.getElementById('readerExtLinkBtn');
+
+    window.switchReaderTab = function(tab) {
+      if (tab === 'pdf') {
+        readerBody.style.display = 'none';
+        readerPdfBody.style.display = 'block';
+        tabPdfViewerBtn.classList.add('active');
+        tabExtractedTextBtn.classList.remove('active');
+      } else {
+        readerBody.style.display = 'flex';
+        readerPdfBody.style.display = 'none';
+        tabExtractedTextBtn.classList.add('active');
+        tabPdfViewerBtn.classList.remove('active');
+      }
+    };
+
+    window.triggerReaderUpload = function() {
+      if (activeReaderPaperId) {
+        triggerUploadModal(activeReaderPaperId, activeReaderLabel);
+      } else {
+        pendingUploadPaperId = "new";
+        pdfFileInput.click();
+      }
+    };
+
     function renderPapers(papers) {
       sessionPapers = {};
       papersList.innerHTML = '';
@@ -729,15 +989,19 @@
         let statusLabel = p.full_text_status || 'Unprocessed';
 
         if (statusLabel === 'reading') statusClass = 'status-reading';
-        else if (statusLabel === 'full_text') statusClass = 'status-full_text';
+        else if (statusLabel === 'full_text') { statusClass = 'status-full_text'; statusLabel = 'Full text'; }
         else if (statusLabel === 'full_text (user upload)') { statusClass = 'status-user_upload'; statusLabel = 'Full text (upload)'; }
         else if (statusLabel.startsWith('abstract_only')) {
           statusClass = 'status-abstract_only';
-          statusLabel = p.full_text_reason ? `Abstract only: ${p.full_text_reason}` : 'Abstract only';
+          statusLabel = p.full_text_reason ? `Abstract only (${p.full_text_reason})` : 'Abstract only';
         }
 
+        const isFull = statusLabel === 'Full text' || statusLabel === 'Full text (upload)';
         const authorsStr = (p.authors && p.authors.length) ? p.authors.slice(0, 3).join(', ') : 'Unknown Authors';
         const yearStr = p.year ? `(${p.year})` : '';
+
+        const directLink = p.pdf_url || p.url || (p.doi ? (p.doi.startsWith('http') ? p.doi : 'https://doi.org/' + p.doi) : null);
+        const linkBtn = directLink ? `<a class="btn btn-xs" href="${escapeHtml(directLink)}" target="_blank" rel="noopener noreferrer" title="Open paper or original PDF directly in a new browser tab">🔗 Open ↗</a>` : '';
 
         card.innerHTML = `
           <div class="paper-top">
@@ -747,9 +1011,11 @@
           <div class="paper-meta">${escapeHtml(authorsStr)} ${yearStr}</div>
           <div class="paper-status-bar">
             <span class="status-badge ${statusClass}" id="badge-${p.label}">${statusLabel}</span>
-            <div class="paper-btns">
-              <button class="btn btn-xs" onclick="triggerReadPaper('${p.id}', '${p.label}')">Read</button>
-              <button class="btn btn-xs" onclick="triggerUploadModal('${p.id}', '${p.label}')">Upload PDF</button>
+            <div class="paper-btns" id="btns-${p.label}">
+              <button class="btn btn-xs btn-primary" onclick="openPaperReader('${p.id}', '${p.label}')" title="Read paper abstract, metadata, or extracted text">📖 Read Paper</button>
+              ${!isFull ? `<button class="btn btn-xs" onclick="triggerReadPaper('${p.id}', '${p.label}')" title="Attempt full-text ingestion">⚡ Ingest Text</button>` : ''}
+              ${linkBtn}
+              <button class="btn btn-xs" onclick="triggerUploadModal('${p.id}', '${p.label}')" title="Upload local PDF from your computer for this paper">📁 Upload</button>
             </div>
           </div>
         `;
@@ -762,7 +1028,7 @@
       const badge = document.getElementById(`badge-${label}`);
       if (badge) {
         badge.className = 'status-badge status-reading';
-        badge.textContent = 'Reading...';
+        badge.textContent = 'Reading & extracting...';
       }
 
       try {
@@ -772,7 +1038,12 @@
           body: JSON.stringify({ session_id: currentSessionId, paper_id: paperId })
         });
         const data = await res.json();
-        updatePaperBadge(label, data.status, data.reason);
+        updatePaperBadge(label, data.status, data.reason, paperId);
+        if (data.status === 'full_text') {
+          showToast(`Full text of ${label} ingested (${data.page_count} pages). Click "📖 Read Paper" to view it.`);
+        } else {
+          showToast(`Abstract of ${label} loaded for Q&A. Click "📖 Read Paper" to view details & web link.`);
+        }
       } catch (err) {
         if (badge) {
           badge.className = 'status-badge status-abstract_only';
@@ -781,7 +1052,7 @@
       }
     };
 
-    function updatePaperBadge(label, status, reason) {
+    function updatePaperBadge(label, status, reason, paperId = null) {
       const badge = document.getElementById(`badge-${label}`);
       if (!badge) return;
 
@@ -793,11 +1064,97 @@
         badge.textContent = 'Full text (upload)';
       } else {
         badge.className = 'status-badge status-abstract_only';
-        badge.textContent = reason ? `Abstract only: ${reason}` : 'Abstract only';
+        badge.textContent = reason ? `Abstract only (${reason})` : 'Abstract only';
       }
     }
 
-    // Read Top 5 Capped
+    // Open Full Paper Reader Modal
+    window.openPaperReader = async function(paperId, label) {
+      activeReaderPaperId = paperId;
+      activeReaderLabel = label;
+      readerPaperLabel.textContent = label;
+      const cachedPaper = sessionPapers[paperId] || sessionPapers[label] || {};
+      readerPaperTitle.textContent = cachedPaper.title || 'Paper Details';
+      readerBody.innerHTML = '<div style="text-align: center; padding: 40px; color: #94a3b8;">Loading paper details...</div>';
+      readerBody.style.display = 'flex';
+      readerPdfBody.style.display = 'none';
+      tabExtractedTextBtn.classList.add('active');
+      tabPdfViewerBtn.classList.remove('active');
+      readerTabs.style.display = 'none';
+      readerExtLinkBtn.style.display = 'none';
+      readerModal.classList.add('active');
+
+      try {
+        const res = await fetch(`/api/papers/${paperId}/text?session_id=${currentSessionId}`);
+        const data = await res.json();
+
+        readerPaperTitle.textContent = data.title || cachedPaper.title || 'Paper Details';
+        const authorsStr = (data.authors && data.authors.length) ? data.authors.join(', ') : 'Unknown Authors';
+        const extUrl = data.direct_pdf_url || data.landing_url || (data.doi ? (data.doi.startsWith('http') ? data.doi : 'https://doi.org/' + data.doi) : null);
+
+        if (extUrl) {
+          readerExtLinkBtn.href = extUrl;
+          readerExtLinkBtn.style.display = 'inline-flex';
+        }
+
+        if (data.has_local_pdf) {
+          readerTabs.style.display = 'flex';
+          readerPdfFrame.src = `/api/papers/${encodeURIComponent(paperId)}/pdf?session_id=${currentSessionId}`;
+        }
+
+        if (data.has_full_text && data.pages && data.pages.length) {
+          let html = `
+            <div class="reader-meta-row">
+              <div><strong>Authors:</strong> ${escapeHtml(authorsStr)}</div>
+              <div><strong>Year:</strong> ${data.year || 'N/A'}</div>
+              ${data.venue ? `<div><strong>Journal / Venue:</strong> ${escapeHtml(data.venue)}</div>` : ''}
+              ${data.doi ? `<div><strong>DOI:</strong> <a href="${escapeHtml(data.doi.startsWith('http') ? data.doi : 'https://doi.org/' + data.doi)}" target="_blank" style="color:#38bdf8;">${escapeHtml(data.doi)}</a></div>` : ''}
+              <div><strong>Total Pages:</strong> ${data.pages.length}</div>
+            </div>
+          `;
+          data.pages.forEach(p => {
+            const pageLines = p.lines.map(l => escapeHtml(l.text)).join('<br>');
+            html += `
+              <div class="reader-page-card">
+                <div class="reader-page-tag">PAGE ${p.page_num} ${p.sections.length ? '— ' + p.sections.join(', ') : ''}</div>
+                <div>${pageLines}</div>
+              </div>
+            `;
+          });
+          readerBody.innerHTML = html;
+        } else {
+          // Abstract only or restricted download view
+          const doiUrl = data.doi ? (data.doi.startsWith('http') ? data.doi : 'https://doi.org/' + data.doi) : null;
+          readerBody.innerHTML = `
+            <div class="reader-banner">
+              <strong style="color: #38bdf8; font-size: 14px;">ℹ️ Abstract Available for AI Chat</strong>
+              <span>Direct automated PDF download was restricted by publisher protection (e.g. Cloudflare, Turnstile, or paywall). The complete paper abstract is indexed for Q&A in this chat. You can read the abstract below, open the original article directly in your browser, or upload a PDF file from your computer.</span>
+            </div>
+            <div class="reader-abstract-card">
+              <div class="reader-meta-row">
+                <div><strong>Authors:</strong> ${escapeHtml(authorsStr)}</div>
+                <div><strong>Year:</strong> ${data.year || 'N/A'}</div>
+                ${data.venue ? `<div><strong>Journal / Venue:</strong> ${escapeHtml(data.venue)}</div>` : ''}
+                ${doiUrl ? `<div><strong>DOI:</strong> <a href="${escapeHtml(doiUrl)}" target="_blank" style="color:#38bdf8;">${escapeHtml(data.doi)}</a></div>` : ''}
+              </div>
+              <div style="font-weight: 600; font-size: 15px; color: #f1f5f9;">Abstract</div>
+              <div style="line-height: 1.8; color: #cbd5e1; font-size: 14px; white-space: pre-wrap;">
+                ${escapeHtml(data.abstract || 'No abstract text available for this work.')}
+              </div>
+              <div style="display: flex; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #1e293b; flex-wrap: wrap; align-items: center;">
+                ${extUrl ? `<a class="btn btn-primary" href="${escapeHtml(extUrl)}" target="_blank" rel="noopener noreferrer">🔗 Open Full Article / PDF in Browser ↗</a>` : ''}
+                <button class="btn" onclick="triggerReadPaper('${paperId}', '${label}')">⚡ Retry Ingestion</button>
+                <button class="btn btn-success" onclick="triggerUploadModal('${paperId}', '${label}')">📁 Upload PDF File</button>
+              </div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        readerBody.innerHTML = `<div style="color: #ef4444; padding: 40px;">Error loading paper: ${err.message}</div>`;
+      }
+    };
+
+    // Read Top 5
     document.getElementById('readTop5Btn').addEventListener('click', async () => {
       const btn = document.getElementById('readTop5Btn');
       btn.textContent = 'Reading 5...';
@@ -809,8 +1166,9 @@
         });
         const data = await res.json();
         data.results.forEach(r => {
-          if (r.paper_label) updatePaperBadge(r.paper_label, r.status, r.reason);
+          if (r.paper_label) updatePaperBadge(r.paper_label, r.status, r.reason, r.paper_id);
         });
+        showToast('Top 5 papers processed.');
       } finally {
         btn.textContent = 'Read Top 5';
       }
@@ -826,6 +1184,8 @@
       if (!pdfFileInput.files.length || !pendingUploadPaperId) return;
       const file = pdfFileInput.files[0];
 
+      showToast(`Uploading and extracting "${file.name}"...`);
+
       const formData = new FormData();
       formData.append('session_id', currentSessionId);
       formData.append('paper_id', pendingUploadPaperId);
@@ -838,7 +1198,12 @@
         });
         const data = await res.json();
         if (data.paper_label) {
-          updatePaperBadge(data.paper_label, data.status, data.reason);
+          updatePaperBadge(data.paper_label, data.status, data.reason, data.paper_id);
+          showToast(`Successfully uploaded ${data.paper_label}! Opening reader view...`);
+          // Refresh paper list so card reflects uploaded status
+          await refreshSessionPapers();
+          // Automatically open reader modal so the user can immediately read their uploaded PDF!
+          openPaperReader(data.paper_id, data.paper_label);
         }
       } catch (err) {
         alert('Upload failed: ' + err.message);
@@ -848,17 +1213,25 @@
       }
     });
 
+    async function refreshSessionPapers() {
+      try {
+        const res = await fetch(`/api/session/${currentSessionId}`);
+        const data = await res.json();
+        if (data.papers) {
+          renderPapers(data.papers);
+        }
+      } catch(e) {}
+    }
+
     // Send Message & Streaming
     async function sendMessage() {
       const msg = chatInput.value.trim();
       if (!msg) return;
 
-      // Add user message to UI
       appendMessage('user', msg);
       chatInput.value = '';
       charCounter.textContent = '0 / 2000';
 
-      // Assistant placeholder
       const assistMsgEl = appendMessage('assistant', '');
       const bubble = assistMsgEl.querySelector('.msg-bubble');
 
@@ -901,9 +1274,6 @@
                 progressIndicator.style.display = 'none';
                 turnRetrievedChunks = eventData.retrieved_chunks || [];
                 bubble.innerHTML = renderFormattedText(eventData.final_text || accumulated);
-                if (eventData.session_cost !== undefined) {
-                  costBadge.textContent = `Cost: $${eventData.session_cost.toFixed(4)} / $1.00`;
-                }
               } else if (eventData.type === 'error') {
                 progressIndicator.style.display = 'none';
                 bubble.innerHTML = `<span style="color: #ef4444;">Error: ${escapeHtml(eventData.detail)}</span>`;
@@ -930,12 +1300,10 @@
       if (!text) return '';
       let escaped = escapeHtml(text);
 
-      // Render Markdown bold & code
       escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       escaped = escaped.replace(/`([^`]+)`/g, '<code style="background:#1e293b;padding:2px 4px;border-radius:3px;">$1</code>');
       escaped = escaped.replace(/\n/g, '<br>');
 
-      // Convert [P# p.N] citations into interactive chips
       escaped = escaped.replace(/\[(P\d+)\s+p\.(\d+)\]/g, (match, pLabel, pNum) => {
         return `<span class="citation-chip" onclick="openPassageDrawer('${pLabel}', ${pNum})">[${pLabel} p.${pNum}]</span>`;
       });
@@ -945,7 +1313,6 @@
 
     // Interactive Passage Drawer
     window.openPassageDrawer = function(paperLabel, pageNum) {
-      // Find matching retrieved chunk
       let matchedChunk = turnRetrievedChunks.find(c => {
         return c.paper_label === paperLabel && (c.page_start <= pageNum && pageNum <= c.page_end);
       });
@@ -956,17 +1323,18 @@
 
       const paper = sessionPapers[paperLabel] || {};
 
-      drawerPaperLabel.textContent = paperLabel;
-      drawerPaperTitle.textContent = paper.title || 'Referenced Paper';
-      drawerPage.textContent = `Page ${pageNum}`;
-      drawerSection.textContent = matchedChunk ? (matchedChunk.section || 'Passage') : 'Retrieved Evidence';
-      drawerPassageText.textContent = matchedChunk ? matchedChunk.text : `Passage covering page ${pageNum} in ${paperLabel}.`;
+      document.getElementById('drawerPaperLabel').textContent = paperLabel;
+      document.getElementById('drawerPaperTitle').textContent = paper.title || 'Referenced Paper';
+      document.getElementById('drawerPage').textContent = `Page ${pageNum}`;
+      document.getElementById('drawerSection').textContent = matchedChunk ? (matchedChunk.section || 'Passage') : 'Retrieved Evidence';
+      document.getElementById('drawerPassageText').textContent = matchedChunk ? matchedChunk.text : `Passage covering page ${pageNum} in ${paperLabel}.`;
 
+      const linkEl = document.getElementById('drawerPaperLink');
       if (paper.url) {
-        drawerPaperLink.href = paper.url;
-        drawerPaperLink.style.display = 'inline';
+        linkEl.href = paper.url;
+        linkEl.style.display = 'inline';
       } else {
-        drawerPaperLink.style.display = 'none';
+        linkEl.style.display = 'none';
       }
 
       passageDrawer.classList.add('open');
@@ -997,10 +1365,9 @@
       currentSessionId = 'sess_' + Math.random().toString(36).substring(2, 9);
       sessionPapers = {};
       turnRetrievedChunks = [];
-      papersList.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; text-align: center; margin-top: 40px;">Search an idea or keywords to load relevant OpenAlex papers.</div>';
+      papersList.innerHTML = '<div style="color: var(--text-muted); font-size: 13px; text-align: center; margin-top: 40px;">Search an idea or keywords to load OpenAlex papers, or click <strong>Upload PDF</strong> above.</div>';
       paperCount.textContent = '0';
-      messagesArea.innerHTML = '<div class="msg msg-assistant"><div class="msg-bubble">New session started. Search for an idea on the left to begin literature exploration.</div></div>';
-      costBadge.textContent = 'Cost: $0.00 / $1.00';
+      messagesArea.innerHTML = '<div class="msg msg-assistant"><div class="msg-bubble">New session started. Search for an idea on the left or upload any PDF paper to begin.</div></div>';
     });
 
     function escapeHtml(str) {

@@ -41,7 +41,7 @@ from .security import (
     SecurityValidationError,
     safe_download_pdf,
 )
-from .sources import find_pdf_source
+from .sources import get_candidate_pdf_urls
 from .summarizer import map_reduce_summarize_paper
 
 
@@ -105,19 +105,38 @@ class ChatService:
 
         paper = session.papers.get(norm_id)
         if not paper:
-            # Try to fetch from OpenAlex if not yet in pool
-            paper = get_openalex_paper(norm_id)
-            if paper:
+            # If user uploaded a custom PDF directly
+            if pdf_bytes_override:
                 label = f"P{len(session.papers) + 1}"
-                paper["label"] = label
+                norm_id = norm_id or f"CUSTOM_{len(session.papers) + 1}"
+                paper = {
+                    "id": norm_id,
+                    "label": label,
+                    "title": f"Uploaded Paper ({label})",
+                    "year": 2024,
+                    "abstract": "Uploaded by user.",
+                    "authors": ["User Upload"],
+                    "url": "",
+                    "full_text_status": "unprocessed",
+                    "page_count": None,
+                    "sections": [],
+                }
                 session.papers[norm_id] = paper
                 session.paper_label_to_id[label] = norm_id
             else:
-                return {
-                    "paper_id": norm_id,
-                    "status": "error",
-                    "reason": f"Paper '{paper_id}' not found in pool or OpenAlex.",
-                }
+                # Try to fetch from OpenAlex if not yet in pool
+                paper = get_openalex_paper(norm_id)
+                if paper:
+                    label = f"P{len(session.papers) + 1}"
+                    paper["label"] = label
+                    session.papers[norm_id] = paper
+                    session.paper_label_to_id[label] = norm_id
+                else:
+                    return {
+                        "paper_id": norm_id,
+                        "status": "error",
+                        "reason": f"Paper '{paper_id}' not found in pool or OpenAlex.",
+                    }
 
         paper_label = paper.get("label", "P1")
 
@@ -160,11 +179,31 @@ class ChatService:
             pdf_bytes = pdf_bytes_override
             status_tag = "full_text (user upload)"
         else:
-            # Discover legal OA PDF URL
-            pdf_url, source_status, reason = find_pdf_source(paper)
-            if not pdf_url:
+            # Discover all candidate legal OA PDF URLs in priority order
+            candidate_urls = get_candidate_pdf_urls(paper)
+            if not candidate_urls:
+                oa_info = paper.get("open_access", {})
+                is_oa = oa_info.get("is_oa", False) if isinstance(oa_info, dict) else False
+                reason = "Paywalled (Abstract available)" if not is_oa else "Direct PDF not indexed (Abstract available)"
                 paper["full_text_status"] = "abstract_only"
                 paper["full_text_reason"] = reason
+
+                # Index abstract into RAG chunks so Q&A still works
+                abstract_text = paper.get("abstract") or ""
+                if abstract_text:
+                    abstract_chunk = {
+                        "chunk_id": f"{paper_label}_abstract",
+                        "paper_label": paper_label,
+                        "paper_id": norm_id,
+                        "page_start": 1,
+                        "page_end": 1,
+                        "section_guess": "abstract",
+                        "chunk_index": 0,
+                        "text": f"Paper {paper_label}: {paper.get('title')}\nAuthors: {', '.join(paper.get('authors', []))}\nYear: {paper.get('year')}\n\nAbstract:\n{abstract_text}",
+                        "is_references": False,
+                    }
+                    index.add_chunks([abstract_chunk])
+
                 return {
                     "paper_id": norm_id,
                     "paper_label": paper_label,
@@ -174,18 +213,52 @@ class ChatService:
                     "sections": [],
                 }
 
-            # Safely download PDF
-            try:
-                pdf_bytes = safe_download_pdf(pdf_url)
-                status_tag = "full_text"
-            except SecurityValidationError as e:
+            # Try candidate URLs in priority order (handles 403 or non-200 on first source)
+            pdf_bytes = None
+            last_download_error = None
+            for cand_url in candidate_urls:
+                try:
+                    pdf_bytes = safe_download_pdf(cand_url)
+                    if pdf_bytes:
+                        status_tag = "full_text"
+                        break
+                except SecurityValidationError as e:
+                    last_download_error = str(e)
+                    continue
+
+            if not pdf_bytes:
+                friendly_reason = "Paywalled or restricted by publisher"
+                if last_download_error and "403" in last_download_error:
+                    friendly_reason = "Publisher requires browser (Abstract available)"
+                elif last_download_error and "Content-Type" in last_download_error:
+                    friendly_reason = "Publisher landing page (Abstract available)"
+                elif last_download_error:
+                    friendly_reason = last_download_error.replace("Download rejected: ", "")
+
                 paper["full_text_status"] = "abstract_only"
-                paper["full_text_reason"] = f"Download rejected: {e}"
+                paper["full_text_reason"] = friendly_reason
+
+                # Index abstract into RAG chunks so Q&A still works
+                abstract_text = paper.get("abstract") or ""
+                if abstract_text:
+                    abstract_chunk = {
+                        "chunk_id": f"{paper_label}_abstract",
+                        "paper_label": paper_label,
+                        "paper_id": norm_id,
+                        "page_start": 1,
+                        "page_end": 1,
+                        "section_guess": "abstract",
+                        "chunk_index": 0,
+                        "text": f"Paper {paper_label}: {paper.get('title')}\nAuthors: {', '.join(paper.get('authors', []))}\nYear: {paper.get('year')}\n\nAbstract:\n{abstract_text}",
+                        "is_references": False,
+                    }
+                    index.add_chunks([abstract_chunk])
+
                 return {
                     "paper_id": norm_id,
                     "paper_label": paper_label,
                     "status": "abstract_only",
-                    "reason": f"Download rejected: {e}",
+                    "reason": friendly_reason,
                     "page_count": 0,
                     "sections": [],
                 }
@@ -199,6 +272,22 @@ class ChatService:
             paper["full_text_status"] = "abstract_only"
             paper["full_text_reason"] = "no text layer (scanned PDF)"
             paper["page_count"] = page_count
+
+            abstract_text = paper.get("abstract") or ""
+            if abstract_text:
+                abstract_chunk = {
+                    "chunk_id": f"{paper_label}_abstract",
+                    "paper_label": paper_label,
+                    "paper_id": norm_id,
+                    "page_start": 1,
+                    "page_end": 1,
+                    "section_guess": "abstract",
+                    "chunk_index": 0,
+                    "text": f"Paper {paper_label}: {paper.get('title')}\nAuthors: {', '.join(paper.get('authors', []))}\nYear: {paper.get('year')}\n\nAbstract:\n{abstract_text}",
+                    "is_references": False,
+                }
+                index.add_chunks([abstract_chunk])
+
             save_ingestion_cache(
                 norm_id,
                 pdf_bytes,
@@ -265,6 +354,73 @@ class ChatService:
             "chunk_count": len(chunks),
         }
 
+    def get_paper_reader_data(self, session_id: str, paper_id: str) -> dict[str, Any]:
+        """Fetch full extracted pages, abstract, and metadata so the user can read the paper in the UI."""
+        session, _ = self.get_or_create_session(session_id)
+        norm_id = self.resolve_paper_id(session, paper_id) or normalize_openalex_id(paper_id)
+        paper = session.papers.get(norm_id) or {}
+        cached = load_ingestion_cache(norm_id)
+
+        from .ingestion import get_cache_paths
+        _, pdf_path, _, _ = get_cache_paths(norm_id)
+        has_local_pdf = pdf_path.exists()
+
+        direct_pdf_url = paper.get("pdf_url")
+        cands = get_candidate_pdf_urls(paper)
+        if not direct_pdf_url and cands:
+            direct_pdf_url = cands[0]
+        landing_url = paper.get("url") or paper.get("doi")
+
+        if cached:
+            ext_data, _ = cached
+            pages = ext_data.get("pages", [])
+            if pages:
+                return {
+                    "paper_id": norm_id,
+                    "label": paper.get("label", ""),
+                    "title": paper.get("title", "Paper"),
+                    "authors": paper.get("authors", []),
+                    "year": paper.get("year"),
+                    "venue": paper.get("venue"),
+                    "doi": paper.get("doi"),
+                    "abstract": paper.get("abstract") or "",
+                    "pages": pages,
+                    "sections": ext_data.get("metadata", {}).get("sections", []),
+                    "has_full_text": True,
+                    "has_local_pdf": has_local_pdf,
+                    "direct_pdf_url": direct_pdf_url,
+                    "landing_url": landing_url,
+                }
+
+        # Abstract-only or not yet ingested
+        return {
+            "paper_id": norm_id,
+            "label": paper.get("label", ""),
+            "title": paper.get("title", "Paper"),
+            "authors": paper.get("authors", []),
+            "year": paper.get("year"),
+            "venue": paper.get("venue"),
+            "doi": paper.get("doi"),
+            "abstract": paper.get("abstract") or "No abstract indexed for this paper.",
+            "pages": [],
+            "sections": [],
+            "has_full_text": False,
+            "has_local_pdf": has_local_pdf,
+            "direct_pdf_url": direct_pdf_url,
+            "landing_url": landing_url,
+            "message": paper.get("full_text_reason") or "Abstract only",
+        }
+
+    def get_paper_pdf_bytes(self, session_id: str, paper_id: str) -> bytes | None:
+        """Return raw PDF bytes from cache if available."""
+        session, _ = self.get_or_create_session(session_id)
+        norm_id = self.resolve_paper_id(session, paper_id) or normalize_openalex_id(paper_id)
+        from .ingestion import get_cache_paths
+        _, pdf_path, _, _ = get_cache_paths(norm_id)
+        if pdf_path.exists():
+            return pdf_path.read_bytes()
+        return None
+
     def chat_turn_stream(
         self,
         session_id: str,
@@ -293,14 +449,6 @@ class ChatService:
             yield {
                 "type": "error",
                 "detail": f"Message exceeds limit of {CHAT_MAX_MESSAGE_CHARS} characters.",
-            }
-            return
-
-        # 3. Cost cap check
-        if session.is_cost_cap_exceeded():
-            yield {
-                "type": "error",
-                "detail": f"Session cost cap of ${session.total_cost_usd:.2f} reached (limit: $1.00).",
             }
             return
 
@@ -384,7 +532,6 @@ class ChatService:
                 "final_text": sanitized_text,
                 "retrieved_chunks": retrieved_chunks_this_turn,
                 "flags": all_flags,
-                "session_cost": round(session.total_cost_usd, 4),
             }
             return
 
@@ -521,5 +668,4 @@ class ChatService:
             "final_text": sanitized_text,
             "retrieved_chunks": retrieved_chunks_this_turn,
             "flags": all_flags,
-            "session_cost": round(session.total_cost_usd, 4),
         }
