@@ -55,4 +55,5 @@ In accordance with academic journal and conference disclosure policies, this doc
   - Implemented automatic retry with exponential backoff on 429 HTTP status (`_call_groq_with_retry`) matching Groq's ~0.67s sliding window reset.
   - Added automatic fallback to `qwen/qwen3.8-27b` if primary model is rate limited.
   - Streamlined UI by removing duplicate "Upload" buttons on individual paper cards, retaining a single clear global upload button in header with contextual upload in the reader modal.
-- **Human oversight:** User reported 429 rate limit error during chat and asked why two upload file options were present.
+  - Resolved Groq API error `Tool choice is none, but model called a tool` by directly streaming answers generated during tool loops and providing explicit text synthesis prompting for tool-closing turns.
+- **Human oversight:** User reported 429 rate limit error during chat and asked why two upload file options were present, then reported `Tool choice is none, but model called a tool` error.

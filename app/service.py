@@ -598,7 +598,7 @@ class ChatService:
                         "messages": conv_messages,
                         "tools": CHAT_TOOLS,
                         "temperature": LLM_TEMPERATURE,
-                        "max_tokens": min(250, LLM_MAX_TOKENS),
+                        "max_tokens": LLM_MAX_TOKENS,
                     },
                 )
             except Exception as e:
@@ -676,14 +676,27 @@ class ChatService:
                 if tool_calls_count >= MAX_TOOL_CALLS_PER_TURN:
                     break
 
-        # Streaming response with tool results or direct stream
-        if not raw_text or tool_calls_count > 0:
+        # Streaming response: if model already generated text in the loop, stream it directly
+        if raw_text:
+            chunk_size = 20
+            for i in range(0, len(raw_text), chunk_size):
+                yield {"type": "delta", "content": raw_text[i : i + chunk_size]}
+        else:
+            # Model executed tool calls and needs explicit final text synthesis
+            synth_messages = list(conv_messages)
+            synth_messages.append({
+                "role": "user",
+                "content": (
+                    "Please synthesize your final response for the researcher based strictly on the retrieved "
+                    "information above. Cite passages using [P# p.N] format where applicable. Provide your answer directly in text."
+                ),
+            })
             try:
                 _used_final, stream = _call_groq_with_retry(
                     groq_client,
                     {
                         "model": LLM_CHAT_MODEL,
-                        "messages": conv_messages,
+                        "messages": synth_messages,
                         "temperature": LLM_TEMPERATURE,
                         "max_tokens": LLM_MAX_TOKENS,
                         "stream": True,
@@ -697,13 +710,12 @@ class ChatService:
                         yield {"type": "delta", "content": c_text}
                 raw_text = "".join(accumulated_chunks)
             except Exception as e:
-                raw_text = f"Rate limit reached on Groq free tier ({e}). Please retry in a few moments."
+                err_str = str(e).lower()
+                if "429" in err_str or "rate limit" in err_str:
+                    raw_text = "Rate limit reached on Groq free tier. Please retry in a few moments."
+                else:
+                    raw_text = f"Error generating final response: {e}"
                 yield {"type": "delta", "content": raw_text}
-        else:
-            # Stream out direct answer smoothly
-            chunk_size = 20
-            for i in range(0, len(raw_text), chunk_size):
-                yield {"type": "delta", "content": raw_text[i : i + chunk_size]}
 
         # Server-enforced validation
         sanitized_text, cit_flags = validate_and_sanitize_citations(
