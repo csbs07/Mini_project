@@ -61,3 +61,67 @@ A production-quality web application built on the shared `litsearch/` retrieval 
 ## 4. Prior Studies & Archival Notice
 
 The previous evaluation study on degree-matched vs. natural candidate evaluation in link prediction has concluded. All code, multi-seed replication tables, and data caches are preserved under [`archive/novagap_eval/`](archive/novagap_eval/) and tagged at `novagap-eval-final` (as well as `v1.0`).
+
+---
+
+## 5. Full-Text RAG Literature Assistant (`/chat`)
+
+A demo literature assistant enabling conversational exploration of the **full text** of academic papers (beyond abstracts) using retrieval-augmented generation (RAG) powered by Groq and PyMuPDF.
+
+### Architecture & Pipeline
+1. **Open-Access Resolution (`app/sources.py`):**
+   - Automatically searches for legal, open-access PDFs in priority order:
+     1. OpenAlex `best_oa_location.pdf_url`
+     2. OpenAlex `open_access.oa_url`
+     3. Other indexed OA locations
+     4. arXiv PDF repository (`arxiv.org/pdf/{id}.pdf`)
+     5. Semantic Scholar `openAccessPdf.url`
+   - If paywalled or no OA URL is available: falls back to `abstract_only` with a descriptive reason.
+   - **Per-Paper Upload:** Users can upload their own PDF for any paper `P#` (status: `full_text (user upload)`).
+
+2. **Download Safety & SSRF Guard (`app/security.py`):**
+   - HTTPS only; host allowlist support via configuration.
+   - Strict SSRF protection: DNS resolution blocks loopback, private RFC 1918, link-local, carrier-grade NAT, and reserved IP ranges.
+   - Maximum 3 manual redirects; max 30 MB file size cap; 30 s timeout.
+   - Magic bytes verification (`%PDF`) and content-type validation.
+   - All extracted text is treated as untrusted data.
+
+3. **Ingestion & Section Chunking (`app/ingestion.py`):**
+   - Text extracted page-by-page using PyMuPDF (`fitz`), preserving 1-indexed page bounds.
+   - Frequency- and coordinate-based stripping of repeated running headers and footers.
+   - Automatic detection of standard academic section headings (`Introduction`, `Methods`, `Results`, `Discussion`, etc.).
+   - References / Bibliography sections are automatically tagged and **excluded from retrieval by default**.
+   - Scanned PDFs without a digital text layer (<100 characters) fall back to `abstract_only` with reason `no text layer`.
+   - Chunking: grouped by section (~700-token windows with 100-token overlap).
+
+4. **Hybrid Retrieval (`app/retrieval.py`):**
+   - Dense semantic embeddings generated via `sentence-transformers` using `all-MiniLM-L6-v2` (fast CPU inference, ~0.02s per 10 items).
+   - Lexical search using `rank_bm25.BM25Okapi`.
+   - Reciprocal Rank Fusion (RRF $k=60$) combining BM25 and dense ranks.
+   - Lazy on-demand ingestion (or capped "Read Top 5").
+
+5. **Groq Tool Use & Map-Reduce Summarizer (`app/llm.py`, `app/summarizer.py`):**
+   - Groq API integration (`llama-3.3-70b-versatile` / `llama-3.1-8b-instant`).
+   - Tools: `search_papers`, `get_paper`, `expand_citations`, `read_paper`, `search_paper_text` (max 5 tool calls per turn).
+   - Map-reduce summarizer over section chunks for full-paper overviews to prevent context overflow.
+   - Streaming Server-Sent Events (SSE) with live progress statuses (`"Downloading P2..."`, `"Reading P2..."`, `"Searching passages..."`).
+
+6. **Grounding & Server-Enforced Rules (`app/grounding.py`):**
+   - Citations formatted strictly as `[P# p.N]`.
+   - Server validates that `P#` exists in the pool, page $N$ is within paper bounds, and the chunk was retrieved in the current turn; invalid citations are stripped and flagged.
+   - Direct quotes must be $\le 25$ words and appear verbatim in retrieved chunks; otherwise stripped and flagged.
+   - Absolute novelty claims (`"nobody has done this"`, `"is novel"`) and automated percentage scores are rejected.
+
+### Running Locally
+```powershell
+# In PowerShell:
+.\run.ps1
+# Opens server at http://127.0.0.1:8000/chat
+```
+
+### Honest Limitations
+- **Open-Access Only:** Approximately 64% of top search results have directly downloadable open-access PDFs; paywalled papers require manual user upload.
+- **PDF Layout Extraction:** Complex multi-column layouts, inline mathematical formulas, and tables can occasionally extract out of order.
+- **No OCR:** Scanned papers lacking an embedded text layer fall back to abstract-only.
+- **Not Exhaustive:** Retrieval is bounded by OpenAlex / arXiv coverage.
+- **Not a Novelty Judgment:** The assistant retrieves and synthesizes literature; it does not issue automated novelty determinations.
