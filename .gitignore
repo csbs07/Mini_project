@@ -50,3 +50,7 @@ Thumbs.db
 # Archives & Cache Zips
 *.zip
 archive/**/*.zip
+
+# Full-text PDF and extracted text caches (never commit PDFs)
+data/fulltext/
+data/
