@@ -46,3 +46,13 @@ In accordance with academic journal and conference disclosure policies, this doc
   - Built an in-app Paper Reader modal with page-by-page extracted text, embedded PDF viewer, rich abstract view, and 1-click external browser link to original papers.
   - Upgraded PDF upload handler to auto-refresh session papers and immediately launch the reader view upon upload.
 - **Human oversight:** User requested removal of cost display, reported 403 download error and upload flow friction, and verified resolved reading experience.
+
+### 2026-10-12: Groq 429 Rate Limit Handling & Upload UX Streamlining (`chatbot-fulltext`)
+- **Role:** Antigravity Coding Agent.
+- **Assistance provided:**
+  - Diagnosed Groq free tier 8,000 TPM limit root cause (two consecutive calls per turn with 1000 max_tokens requested 2,536 tokens against 5,554 used).
+  - Reduced `LLM_MAX_TOKENS` from 1000 to 600 and tool selection calls to 250 tokens to lower token reservation footprint.
+  - Implemented automatic retry with exponential backoff on 429 HTTP status (`_call_groq_with_retry`) matching Groq's ~0.67s sliding window reset.
+  - Added automatic fallback to `qwen/qwen3.8-27b` if primary model is rate limited.
+  - Streamlined UI by removing duplicate "Upload" buttons on individual paper cards, retaining a single clear global upload button in header with contextual upload in the reader modal.
+- **Human oversight:** User reported 429 rate limit error during chat and asked why two upload file options were present.

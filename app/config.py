@@ -19,7 +19,7 @@ OPENALEX_MAILTO: str = os.getenv("OPENALEX_MAILTO", "researcher@example.com")
 GROQ_API_KEY: str | None = os.getenv("GROQ_API_KEY") or os.getenv("LLM_API_KEY")
 LLM_CHAT_MODEL: str = os.getenv("LLM_CHAT_MODEL", "openai/gpt-oss-20b")
 LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.3"))
-LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "1000"))
+LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "600"))
 
 # Cost and Rate Limits
 CHAT_SESSION_COST_CAP_USD: float = float(os.getenv("CHAT_SESSION_COST_CAP_USD", "1.00"))

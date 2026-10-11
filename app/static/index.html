@@ -716,7 +716,7 @@
       <span>Full-Text Literature Exploration</span>
     </div>
     <div class="header-actions">
-      <button class="btn btn-success" id="uploadAnyPdfBtn">📁 Upload PDF</button>
+      <button class="btn btn-success" id="uploadAnyPdfBtn" title="Upload a PDF paper from your computer into this session">📁 Upload PDF</button>
       <button class="btn" id="exportChatBtn">Export Chat</button>
       <button class="btn btn-primary" id="newSessionBtn">New Session</button>
     </div>
@@ -1015,7 +1015,6 @@
               <button class="btn btn-xs btn-primary" onclick="openPaperReader('${p.id}', '${p.label}')" title="Read paper abstract, metadata, or extracted text">📖 Read Paper</button>
               ${!isFull ? `<button class="btn btn-xs" onclick="triggerReadPaper('${p.id}', '${p.label}')" title="Attempt full-text ingestion">⚡ Ingest Text</button>` : ''}
               ${linkBtn}
-              <button class="btn btn-xs" onclick="triggerUploadModal('${p.id}', '${p.label}')" title="Upload local PDF from your computer for this paper">📁 Upload</button>
             </div>
           </div>
         `;
@@ -1198,10 +1197,9 @@
         });
         const data = await res.json();
         if (data.paper_label) {
+          await refreshSessionPapers();
           updatePaperBadge(data.paper_label, data.status, data.reason, data.paper_id);
           showToast(`Successfully uploaded ${data.paper_label}! Opening reader view...`);
-          // Refresh paper list so card reflects uploaded status
-          await refreshSessionPapers();
           // Automatically open reader modal so the user can immediately read their uploaded PDF!
           openPaperReader(data.paper_id, data.paper_label);
         }

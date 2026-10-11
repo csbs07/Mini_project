@@ -1,5 +1,6 @@
 """Service layer coordinating sessions, ingestion, hybrid retrieval, tool calls, and streaming."""
 import json
+import time
 from collections.abc import Generator
 from typing import Any
 
@@ -43,6 +44,47 @@ from .security import (
 )
 from .sources import get_candidate_pdf_urls
 from .summarizer import map_reduce_summarize_paper
+
+
+def _call_groq_with_retry(
+    groq_client: Any,
+    kwargs: dict[str, Any],
+    max_retries: int = 3,
+) -> tuple[str, Any]:
+    """Call Groq completions with retry on 429 rate limit and automatic fallback model."""
+    primary_model = kwargs.get("model", LLM_CHAT_MODEL)
+    fallback_model = "qwen/qwen3.8-27b"
+    models_to_try = [primary_model]
+    if fallback_model != primary_model:
+        models_to_try.append(fallback_model)
+
+    last_err: Exception | None = None
+    for model_name in models_to_try:
+        call_kwargs = dict(kwargs)
+        call_kwargs["model"] = model_name
+        for attempt in range(max_retries):
+            try:
+                res = groq_client.chat.completions.create(**call_kwargs)
+                return model_name, res
+            except Exception as e:
+                last_err = e
+                err_str = str(e).lower()
+                status_code = getattr(e, "status_code", None)
+                if (
+                    status_code == 429
+                    or "429" in err_str
+                    or "rate limit" in err_str
+                    or "rate_limit" in err_str
+                ):
+                    # Groq free-tier TPM rate limits reset in ~0.6-1.5s
+                    time.sleep(1.0 * (attempt + 1))
+                    continue
+                # Non-rate-limit error: do not retry this model
+                raise e
+
+    if last_err:
+        raise last_err
+    raise RuntimeError("Groq call failed with unknown error")
 
 
 class ChatService:
@@ -544,15 +586,20 @@ class ChatService:
         conv_messages.append({"role": "user", "content": user_message})
 
         tool_calls_count = 0
+        raw_text = ""
+        used_model = LLM_CHAT_MODEL
 
         while tool_calls_count < MAX_TOOL_CALLS_PER_TURN:
             try:
-                response = groq_client.chat.completions.create(
-                    model=LLM_CHAT_MODEL,
-                    messages=conv_messages,
-                    tools=CHAT_TOOLS,
-                    temperature=LLM_TEMPERATURE,
-                    max_tokens=LLM_MAX_TOKENS,
+                used_model, response = _call_groq_with_retry(
+                    groq_client,
+                    {
+                        "model": LLM_CHAT_MODEL,
+                        "messages": conv_messages,
+                        "tools": CHAT_TOOLS,
+                        "temperature": LLM_TEMPERATURE,
+                        "max_tokens": min(250, LLM_MAX_TOKENS),
+                    },
                 )
             except Exception as e:
                 yield {"type": "error", "detail": f"Groq API error: {e}"}
@@ -562,7 +609,7 @@ class ChatService:
             msg = choice.message
             prompt_toks = response.usage.prompt_tokens if response.usage else 200
             comp_toks = response.usage.completion_tokens if response.usage else 50
-            session.record_usage(LLM_CHAT_MODEL, prompt_toks, comp_toks)
+            session.record_usage(used_model, prompt_toks, comp_toks)
 
             if not msg.tool_calls:
                 # No more tools needed, proceed to text response
@@ -583,7 +630,7 @@ class ChatService:
                 elif fn_name == "search_paper_text":
                     q = fn_args.get("query", "")
                     p_ids = fn_args.get("paper_ids")
-                    k_val = min(fn_args.get("k", 4), MAX_RETRIEVAL_CHUNKS)
+                    k_val = min(fn_args.get("k", 3), MAX_RETRIEVAL_CHUNKS)
                     yield {"type": "progress", "message": f"Searching passages for '{q[:30]}'..."}
                     chunks = index.search(q, paper_ids=p_ids, k=k_val)
                     retrieved_chunks_this_turn.extend(chunks)
@@ -594,7 +641,7 @@ class ChatService:
                                 "paper": c["paper_label"],
                                 "page": c["page_start"],
                                 "section": c["section"],
-                                "text": c["text"],
+                                "text": c["text"][:500] if len(c["text"]) > 500 else c["text"],
                             }
                             for c in chunks
                         ],
@@ -629,24 +676,34 @@ class ChatService:
                 if tool_calls_count >= MAX_TOOL_CALLS_PER_TURN:
                     break
 
-        # Final streaming response with tool results included
-        try:
-            stream = groq_client.chat.completions.create(
-                model=LLM_CHAT_MODEL,
-                messages=conv_messages,
-                temperature=LLM_TEMPERATURE,
-                max_tokens=LLM_MAX_TOKENS,
-                stream=True,
-            )
-            accumulated_chunks = []
-            for chunk in stream:
-                if chunk.choices and chunk.choices[0].delta.content:
-                    c_text = chunk.choices[0].delta.content
-                    accumulated_chunks.append(c_text)
-                    yield {"type": "delta", "content": c_text}
-            raw_text = "".join(accumulated_chunks)
-        except Exception as e:
-            raw_text = f"Error generating final response: {e}"
+        # Streaming response with tool results or direct stream
+        if not raw_text or tool_calls_count > 0:
+            try:
+                _used_final, stream = _call_groq_with_retry(
+                    groq_client,
+                    {
+                        "model": LLM_CHAT_MODEL,
+                        "messages": conv_messages,
+                        "temperature": LLM_TEMPERATURE,
+                        "max_tokens": LLM_MAX_TOKENS,
+                        "stream": True,
+                    },
+                )
+                accumulated_chunks = []
+                for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta.content:
+                        c_text = chunk.choices[0].delta.content
+                        accumulated_chunks.append(c_text)
+                        yield {"type": "delta", "content": c_text}
+                raw_text = "".join(accumulated_chunks)
+            except Exception as e:
+                raw_text = f"Rate limit reached on Groq free tier ({e}). Please retry in a few moments."
+                yield {"type": "delta", "content": raw_text}
+        else:
+            # Stream out direct answer smoothly
+            chunk_size = 20
+            for i in range(0, len(raw_text), chunk_size):
+                yield {"type": "delta", "content": raw_text[i : i + chunk_size]}
 
         # Server-enforced validation
         sanitized_text, cit_flags = validate_and_sanitize_citations(

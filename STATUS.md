@@ -23,3 +23,5 @@
 - [x] In-app Full-Text & Abstract Reader: Modal with page-by-page extracted text, embedded PDF viewer, and rich abstract view with 1-click "Open PDF in Browser ↗".
 - [x] Abstract auto-indexing: abstracts are indexed into session chunks so chat Q&A remains grounded and functional even if publisher blocks PDF downloads.
 - [x] Removed cost meters and cost caps for frictionless user experience.
+- [x] Groq 429 rate-limit resilience: automatic exponential backoff retry loop, token quota reduction (max_tokens=250 for tool calls, max_tokens=600 for completion), chunk size caps, direct stream for tool-free turns, and automatic model fallback to `qwen/qwen3.8-27b`.
+- [x] Streamlined upload UX: removed duplicate upload buttons from individual paper cards, keeping one clear global upload button in header with contextual upload in the reader modal.
