@@ -17,7 +17,7 @@ OPENALEX_MAILTO: str = os.getenv("OPENALEX_MAILTO", "researcher@example.com")
 
 # LLM API Configuration (Groq API)
 GROQ_API_KEY: str | None = os.getenv("GROQ_API_KEY") or os.getenv("LLM_API_KEY")
-LLM_CHAT_MODEL: str = os.getenv("LLM_CHAT_MODEL", "llama-3.3-70b-versatile")
+LLM_CHAT_MODEL: str = os.getenv("LLM_CHAT_MODEL", "openai/gpt-oss-20b")
 LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.3"))
 LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "1000"))
 

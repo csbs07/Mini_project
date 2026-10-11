@@ -44,7 +44,8 @@ def test_live_workflow():
             if ev.get("type") == "progress":
                 print(f"  [Progress Event] {ev.get('message')}")
             elif ev.get("type") == "done":
-                print(f"  [Done Event] Final text snippet: {ev.get('final_text')[:100]}...")
+                snippet = ev.get("final_text", "")[:100].encode("ascii", "replace").decode("ascii")
+                print(f"  [Done Event] Final text snippet: {snippet}...")
                 print(f"  [Done Event] Cost: ${ev.get('session_cost')}")
     
     assert any(e.get("type") == "done" for e in events)
