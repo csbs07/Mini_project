@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LitSearch — Sign In or Register</title>
+  
+  <!-- Modern Typography: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/static/theme.css">
+  
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-6);
+      background-color: var(--bg-app);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(184, 255, 44, 0.05) 0%, transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(92, 255, 177, 0.03) 0%, transparent 50%);
+      background-attachment: fixed;
+      position: relative;
+    }
+
+    /* Top Navigation bar on login */
+    .top-bar {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 8px 14px;
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.18s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--primary-border);
+      color: var(--text-primary);
+      box-shadow: var(--glow-lime-sm);
+    }
+
+    /* Centered Auth Card */
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 40px 36px;
+      box-shadow: var(--shadow-xl);
+      position: relative;
+      overflow: hidden;
+      animation: card-appear 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Subtle top accent hairline */
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+      opacity: 0.85;
+    }
+
+    @keyframes card-appear {
+      from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Brand Header */
+    .brand-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .brand-logo {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, var(--primary) 0%, #8FE300 100%);
+      color: #0D0F0C;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.04em;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 24px var(--primary-glow);
+      margin-bottom: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .brand-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+    }
+
+    .brand-subtitle {
+      font-size: var(--font-size-sm);
+      color: var(--text-muted);
+      margin-top: 5px;
+      font-weight: 400;
+    }
+
+    /* Auth Tab Switcher */
+    .auth-tabs {
+      display: flex;
+      background: var(--bg-surface-subtle);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 24px;
+      gap: 4px;
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: center;
+    }
+
+    .auth-tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .auth-tab-btn.active {
+      background: var(--bg-surface);
+      color: var(--primary);
+      font-weight: 700;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    [data-theme="light"] .auth-tab-btn.active {
+      color: var(--accent-link);
+    }
+
+    /* Form Fields */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+    }
+
+    .form-helper {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      width: 100%;
+      background: var(--primary);
+      color: var(--primary-text);
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-size: var(--font-size-base);
+      font-weight: 700;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 22px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .submit-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--glow-lime);
+    }
+
+    .submit-btn:active {
+      transform: translateY(0);
+      background: var(--primary-active);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Alert Banner */
+    .alert-banner {
+      padding: 11px 14px;
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-sm);
+      line-height: 1.45;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      animation: alert-slide 0.2s ease forwards;
+    }
+
+    @keyframes alert-slide {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .alert-banner.alert-error {
+      display: flex;
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: var(--error-text);
+    }
+
+    .alert-banner.alert-success {
+      display: flex;
+      background: var(--secondary-subtle);
+      border: 1px solid var(--secondary-border);
+      color: var(--secondary);
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: var(--font-size-xs);
+      color: var(--text-muted);
+      margin-top: 26px;
+    }
+
+    .footer-note a {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: none;
+      transition: text-decoration 0.15s ease;
+    }
+
+    [data-theme="light"] .footer-note a {
+      color: var(--accent-link);
+    }
+
+    .footer-note a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar with theme toggle -->
+  <div class="top-bar">
+    <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Dark/Light Mode" aria-label="Toggle theme">
+      <span id="themeToggleIcon">☀️</span>
+      <span id="themeToggleLabel">Light Mode</span>
+    </button>
+  </div>
+
+  <div class="auth-card">
+    <div class="brand-header">
+      <div class="brand-logo" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+          <path d="M6 6h10"></path>
+          <path d="M6 10h7"></path>
+        </svg>
+      </div>
+      <h1 class="brand-title">LitSearch</h1>
+      <p class="brand-subtitle">Grounded Academic Research &amp; RAG</p>
+    </div>
+
+    <!-- Mode Selector: Sign In / Create Account -->
+    <div class="auth-tabs" role="tablist">
+      <button class="auth-tab-btn active" id="tabLoginBtn" type="button" role="tab" aria-selected="true">Sign In</button>
+      <button class="auth-tab-btn" id="tabSignupBtn" type="button" role="tab" aria-selected="false">Create Account</button>
+    </div>
+
+    <div class="alert-banner" id="alertBanner" role="alert"></div>
+
+    <!-- Login Form -->
+    <form id="loginForm" autocomplete="on">
+      <div class="form-group">
+        <label class="form-label" for="loginIdentifier">Username or Email</label>
+        <input class="form-input" id="loginIdentifier" type="text" placeholder="e.g. researcher or user@example.com" required autocomplete="username">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Password</label>
+        <div class="password-input-wrap">
+          <input class="form-input" id="loginPassword" type="password" placeholder="••••••••" required autocomplete="current-password">
+          <button type="button" class="password-toggle-btn" id="toggleLoginPasswordBtn" title="Show/Hide password" aria-label="Show password">
+            <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="loginSubmitBtn" type="submit">
+        <span id="loginBtnText">Sign In</span>
+      </button>
+    </form>
+
+    <!-- Sign Up Form (hidden by default) -->
+    <form id="signupForm" style="display: none;" autocomplete="on">
+      <div class="form-group">
+        <label class="form-label" for="signupUsername">Username</label>
+        <input class="form-input" id="signupUsername" type="text" placeholder="e.g. alex_research" required autocomplete="username">
+        <span class="form-helper">At least 3 characters. Letters, numbers, hyphens, underscores.</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signupEmail">Email Address</label>
+        <input class="form-input" id="signupEmail" type="email" placeholder="e.g. alex@university.edu" required autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signupPassword">Password</label>
+        <div class="password-input-wrap">
+          <input class="form-input" id="signupPassword" type="password" placeholder="Minimum 8 characters" required minlength="8" autocomplete="new-password">
+          <button type="button" class="password-toggle-btn" id="toggleSignupPasswordBtn" title="Show/Hide password" aria-label="Show password">
+            <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="signupPasswordConfirm">Confirm Password</label>
+        <div class="password-input-wrap">
+          <input class="form-input" id="signupPasswordConfirm" type="password" placeholder="Re-enter password" required minlength="8" autocomplete="new-password">
+          <button type="button" class="password-toggle-btn" id="toggleSignupPasswordConfirmBtn" title="Show/Hide password" aria-label="Show password">
+            <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="signupSubmitBtn" type="submit">
+        <span id="signupBtnText">Create Account</span>
+      </button>
+    </form>
+
+    <div class="footer-note">
+      <span id="switchPrompt">Don't have an account? <a href="#" id="switchLink">Sign Up</a></span>
+    </div>
+  </div>
+
+  <script>
+    // Theme toggle management
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeToggleIcon = document.getElementById('themeToggleIcon');
+    const themeToggleLabel = document.getElementById('themeToggleLabel');
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('litsearch_theme', theme);
+      if (themeToggleIcon && themeToggleLabel) {
+        if (theme === 'dark') {
+          themeToggleIcon.textContent = '☀️';
+          themeToggleLabel.textContent = 'Light Mode';
+        } else {
+          themeToggleIcon.textContent = '🌙';
+          themeToggleLabel.textContent = 'Dark Mode';
+        }
+      }
+    }
+
+    // Default to dark mode as requested
+    const savedTheme = localStorage.getItem('litsearch_theme') || 'dark';
+    applyTheme(savedTheme);
+
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+        applyTheme(cur === 'dark' ? 'light' : 'dark');
+      });
+    }
+
+    // Password visibility toggles
+    function setupPasswordToggle(buttonId, inputId) {
+      const btn = document.getElementById(buttonId);
+      const input = document.getElementById(inputId);
+      if (!btn || !input) return;
+
+      const eyeIconSvg = `
+        <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      `;
+
+      const eyeOffIconSvg = `
+        <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+          <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+          <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+          <line x1="2" y1="2" x2="22" y2="22"></line>
+        </svg>
+      `;
+
+      btn.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        btn.innerHTML = isPassword ? eyeOffIconSvg : eyeIconSvg;
+        btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+      });
+    }
+
+    setupPasswordToggle('toggleLoginPasswordBtn', 'loginPassword');
+    setupPasswordToggle('toggleSignupPasswordBtn', 'signupPassword');
+    setupPasswordToggle('toggleSignupPasswordConfirmBtn', 'signupPasswordConfirm');
+
+    // UI elements
+    const tabLoginBtn = document.getElementById('tabLoginBtn');
+    const tabSignupBtn = document.getElementById('tabSignupBtn');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const switchPrompt = document.getElementById('switchPrompt');
+    const switchLink = document.getElementById('switchLink');
+    const alertBanner = document.getElementById('alertBanner');
+
+    function showAlert(msg, isError = true) {
+      alertBanner.innerHTML = `
+        <span style="font-size: 16px; flex-shrink: 0;">${isError ? '⚠️' : '✓'}</span>
+        <span>${msg}</span>
+      `;
+      alertBanner.className = 'alert-banner ' + (isError ? 'alert-error' : 'alert-success');
+      alertBanner.style.display = 'flex';
+    }
+
+    function clearAlert() {
+      alertBanner.textContent = '';
+      alertBanner.style.display = 'none';
+    }
+
+    function setMode(mode) {
+      clearAlert();
+      if (mode === 'signup') {
+        tabSignupBtn.classList.add('active');
+        tabSignupBtn.setAttribute('aria-selected', 'true');
+        tabLoginBtn.classList.remove('active');
+        tabLoginBtn.setAttribute('aria-selected', 'false');
+        signupForm.style.display = 'block';
+        loginForm.style.display = 'none';
+        switchPrompt.innerHTML = `Already have an account? <a href="#" id="switchLink">Sign In</a>`;
+        document.getElementById('switchLink').onclick = (e) => { e.preventDefault(); setMode('login'); };
+      } else {
+        tabLoginBtn.classList.add('active');
+        tabLoginBtn.setAttribute('aria-selected', 'true');
+        tabSignupBtn.classList.remove('active');
+        tabSignupBtn.setAttribute('aria-selected', 'false');
+        loginForm.style.display = 'block';
+        signupForm.style.display = 'none';
+        switchPrompt.innerHTML = `Don't have an account? <a href="#" id="switchLink">Sign Up</a>`;
+        document.getElementById('switchLink').onclick = (e) => { e.preventDefault(); setMode('signup'); };
+      }
+    }
+
+    tabLoginBtn.addEventListener('click', () => setMode('login'));
+    tabSignupBtn.addEventListener('click', () => setMode('signup'));
+    switchLink.addEventListener('click', (e) => { e.preventDefault(); setMode('signup'); });
+
+    // Check if URL has ?mode=signup
+    if (window.location.search.includes('mode=signup') || window.location.pathname.includes('/signup')) {
+      setMode('signup');
+    }
+
+    // Login Submission
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+
+      const identifier = document.getElementById('loginIdentifier').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      const btnText = document.getElementById('loginBtnText');
+
+      if (!identifier || !password) {
+        showAlert('Please enter both username/email and password.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      btnText.innerHTML = '<span class="spinner"></span> Signing in...';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier, password }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          showAlert(data.detail || 'Login failed. Please check your credentials.');
+          submitBtn.disabled = false;
+          btnText.textContent = 'Sign In';
+          return;
+        }
+
+        showAlert('Signed in successfully! Redirecting...', false);
+        setTimeout(() => {
+          window.location.href = '/chat';
+        }, 450);
+      } catch (err) {
+        showAlert('Network or connection error. Please try again.');
+        submitBtn.disabled = false;
+        btnText.textContent = 'Sign In';
+      }
+    });
+
+    // Sign Up Submission
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearAlert();
+
+      const username = document.getElementById('signupUsername').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      const confirmPassword = document.getElementById('signupPasswordConfirm').value;
+      const submitBtn = document.getElementById('signupSubmitBtn');
+      const btnText = document.getElementById('signupBtnText');
+
+      if (password !== confirmPassword) {
+        showAlert('Passwords do not match.');
+        return;
+      }
+
+      if (password.length < 8) {
+        showAlert('Password must be at least 8 characters long.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      btnText.innerHTML = '<span class="spinner"></span> Creating account...';
+
+      try {
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          showAlert(data.detail || 'Sign up failed. Please check your details.');
+          submitBtn.disabled = false;
+          btnText.textContent = 'Create Account';
+          return;
+        }
+
+        showAlert('Account created successfully! Redirecting...', false);
+        setTimeout(() => {
+          window.location.href = '/chat';
+        }, 450);
+      } catch (err) {
+        showAlert('Network or connection error. Please try again.');
+        submitBtn.disabled = false;
+        btnText.textContent = 'Create Account';
+      }
+    });
+  </script>
+</body>
+</html>

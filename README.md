@@ -116,7 +116,7 @@ A demo literature assistant enabling conversational exploration of the **full te
 ```powershell
 # In PowerShell:
 .\run.ps1
-# Opens server at http://127.0.0.1:8000/chat
+# Opens server at http://127.0.0.1:8001/chat
 ```
 
 ### Honest Limitations

@@ -13,6 +13,7 @@ from .config import (
     MAX_RETRIEVAL_CHUNKS,
     MAX_TOOL_CALLS_PER_TURN,
 )
+from .github import search_github_repositories
 from .grounding import (
     SYSTEM_PROMPT,
     sanitize_forbidden_claims,
@@ -51,7 +52,7 @@ def _call_groq_with_retry(
     kwargs: dict[str, Any],
     max_retries: int = 3,
 ) -> tuple[str, Any]:
-    """Call Groq completions with retry on 429 rate limit and automatic fallback model."""
+    """Call Groq completions with retry on 429 rate limit, timeouts, and automatic fallback model."""
     primary_model = kwargs.get("model", LLM_CHAT_MODEL)
     fallback_model = "qwen/qwen3.8-27b"
     models_to_try = [primary_model]
@@ -70,17 +71,22 @@ def _call_groq_with_retry(
                 last_err = e
                 err_str = str(e).lower()
                 status_code = getattr(e, "status_code", None)
-                if (
-                    status_code == 429
+                is_transient = (
+                    status_code in (429, 500, 502, 503, 504)
                     or "429" in err_str
                     or "rate limit" in err_str
                     or "rate_limit" in err_str
-                ):
-                    # Groq free-tier TPM rate limits reset in ~0.6-1.5s
+                    or "timed out" in err_str
+                    or "timeout" in err_str
+                    or "connection error" in err_str
+                    or "connecterror" in err_str
+                    or "getaddrinfo failed" in err_str
+                )
+                if is_transient and attempt < max_retries - 1:
                     time.sleep(1.0 * (attempt + 1))
                     continue
-                # Non-rate-limit error: do not retry this model
-                raise e
+                # If non-transient error or exhausted retries for this model, try fallback model
+                break
 
     if last_err:
         raise last_err
@@ -114,6 +120,19 @@ class ChatService:
             session.papers[clean_id] = p
             session.paper_label_to_id[label] = clean_id
 
+    def add_papers_to_session(self, session_id: str, papers: list[dict[str, Any]]) -> None:
+        """Add new papers to session pool without discarding existing papers."""
+        session, _ = self.get_or_create_session(session_id)
+        existing_ids = set(session.papers.keys())
+        for p in papers:
+            clean_id = normalize_openalex_id(p["id"])
+            if clean_id not in existing_ids:
+                label = f"P{len(session.papers) + 1}"
+                p["label"] = label
+                session.papers[clean_id] = p
+                session.paper_label_to_id[label] = clean_id
+                existing_ids.add(clean_id)
+
     def resolve_paper_id(self, session: SessionState, paper_id_or_label: str) -> str | None:
         """Resolve a label like 'P1' or an ID to the normalized OpenAlex ID."""
         clean = paper_id_or_label.strip()
@@ -126,6 +145,16 @@ class ChatService:
             if norm.lower() in p_id.lower():
                 return p_id
         return None
+
+    def load_conversation_messages(self, session_id: str, user_id: int) -> list[dict[str, Any]]:
+        """Load persisted conversation messages into in-memory session if not already populated."""
+        from .db import get_messages_for_conversation
+        session, _ = self.get_or_create_session(session_id)
+        db_msgs = get_messages_for_conversation(session_id, user_id)
+        session.messages.clear()
+        for m in db_msgs:
+            session.messages.append({"role": m["role"], "content": m["content"]})
+        return db_msgs
 
     def ingest_paper(
         self,
@@ -468,6 +497,7 @@ class ChatService:
         session_id: str,
         user_message: str,
         client_ip: str = "127.0.0.1",
+        user_id: int | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         """
         Execute chat turn with streaming SSE events, tool execution loop, and server grounding validation.
@@ -493,6 +523,17 @@ class ChatService:
                 "detail": f"Message exceeds limit of {CHAT_MAX_MESSAGE_CHARS} characters.",
             }
             return
+
+        # 3. Persist user message to database if user is authenticated
+        if user_id is not None:
+            try:
+                from .db import add_message, get_or_create_conversation, touch_conversation
+                title_preview = user_message.strip()[:40] if user_message.strip() else "Research Chat"
+                get_or_create_conversation(session_id, user_id, default_title=title_preview)
+                add_message(session_id, "user", user_message)
+                touch_conversation(session_id, user_id, title_update=title_preview)
+            except Exception as e:
+                print(f"[Warning] Failed to persist user message: {e}")
 
         groq_client = get_groq_client()
         retrieved_chunks_this_turn: list[dict[str, Any]] = []
@@ -568,6 +609,16 @@ class ChatService:
 
             all_flags = cit_flags + quote_flags + claim_flags
             session.record_usage(LLM_CHAT_MODEL, 150, 100)
+
+            session.messages.append({"role": "user", "content": user_message})
+            session.messages.append({"role": "assistant", "content": sanitized_text})
+            if user_id is not None:
+                try:
+                    from .db import add_message, touch_conversation
+                    add_message(session_id, "assistant", sanitized_text)
+                    touch_conversation(session_id, user_id)
+                except Exception as e:
+                    print(f"[Warning] Failed to persist assistant message: {e}")
 
             yield {
                 "type": "done",
@@ -650,7 +701,7 @@ class ChatService:
                     q = fn_args.get("query", "")
                     yield {"type": "progress", "message": f"Searching papers for '{q[:30]}'..."}
                     found = search_openalex_papers(q, per_page=10)
-                    self.set_session_papers(session_id, found)
+                    self.add_papers_to_session(session_id, found)
                     result = {
                         "count": len(found),
                         "papers": [{"label": p["label"], "title": p["title"]} for p in found],
@@ -664,6 +715,26 @@ class ChatService:
                     norm_id = self.resolve_paper_id(session, p_id) or p_id
                     refs = expand_citations_openalex(norm_id, limit=5)
                     result = {"referenced_works": [r["title"] for r in refs]}
+                elif fn_name == "search_github_repos":
+                    q = fn_args.get("query", "")
+                    yield {"type": "progress", "message": f"Searching GitHub code repos for '{q[:30]}'..."}
+                    gh_res = search_github_repositories(q, max_results=6)
+                    repos = gh_res.get("repositories", [])
+                    result = {
+                        "count": len(repos),
+                        "repositories": [
+                            {
+                                "name": r["full_name"],
+                                "url": r["url"],
+                                "stars": r["stars"],
+                                "language": r["language"],
+                                "description": r["description"],
+                            }
+                            for r in repos
+                        ],
+                        "disclaimer": gh_res.get("disclaimer"),
+                        "rate_limited": gh_res.get("rate_limited", False),
+                    }
                 else:
                     result = {"error": f"Unknown tool: {fn_name}"}
 
@@ -691,6 +762,7 @@ class ChatService:
                     "information above. Cite passages using [P# p.N] format where applicable. Provide your answer directly in text."
                 ),
             })
+            accumulated_chunks = []
             try:
                 _used_final, stream = _call_groq_with_retry(
                     groq_client,
@@ -702,20 +774,50 @@ class ChatService:
                         "stream": True,
                     },
                 )
-                accumulated_chunks = []
                 for chunk in stream:
                     if chunk.choices and chunk.choices[0].delta.content:
                         c_text = chunk.choices[0].delta.content
                         accumulated_chunks.append(c_text)
                         yield {"type": "delta", "content": c_text}
                 raw_text = "".join(accumulated_chunks)
-            except Exception as e:
-                err_str = str(e).lower()
-                if "429" in err_str or "rate limit" in err_str:
-                    raw_text = "Rate limit reached on Groq free tier. Please retry in a few moments."
+            except Exception:
+                if accumulated_chunks:
+                    raw_text = "".join(accumulated_chunks)
                 else:
-                    raw_text = f"Error generating final response: {e}"
-                yield {"type": "delta", "content": raw_text}
+                    # Attempt non-streaming fallback
+                    try:
+                        _used_final, non_stream_res = _call_groq_with_retry(
+                            groq_client,
+                            {
+                                "model": LLM_CHAT_MODEL,
+                                "messages": synth_messages,
+                                "temperature": LLM_TEMPERATURE,
+                                "max_tokens": LLM_MAX_TOKENS,
+                                "stream": False,
+                            },
+                        )
+                        raw_text = non_stream_res.choices[0].message.content or ""
+                        yield {"type": "delta", "content": raw_text}
+                    except Exception as e2:
+                        err_str = str(e2).lower()
+                        if "429" in err_str or "rate limit" in err_str:
+                            raw_text = "Rate limit reached on Groq free tier. Please retry in a few moments."
+                        elif retrieved_chunks_this_turn:
+                            passages_summary = []
+                            for c in retrieved_chunks_this_turn[:5]:
+                                p_lbl = c.get("paper_label", "P1")
+                                p_pg = c.get("page_start", 1)
+                                sec = c.get("section", "Section")
+                                txt = c.get("text", "").strip()[:400]
+                                passages_summary.append(f"**From {p_lbl} ({sec}, page {p_pg}) [{p_lbl} p.{p_pg}]:**\n{txt}")
+                            raw_text = (
+                                "Here is the detailed information from the retrieved paper passages:\n\n"
+                                + "\n\n".join(passages_summary)
+                                + "\n\n*(Note: Cloud LLM synthesis timed out due to network latency, but the above evidence was retrieved directly from the paper.)*"
+                            )
+                        else:
+                            raw_text = f"Error generating final response: {e2}. Please check your connection and try again."
+                        yield {"type": "delta", "content": raw_text}
 
         # Server-enforced validation
         sanitized_text, cit_flags = validate_and_sanitize_citations(
@@ -731,6 +833,13 @@ class ChatService:
         # Update session history (safe without dumping large PDFs or raw chunks)
         session.messages.append({"role": "user", "content": user_message})
         session.messages.append({"role": "assistant", "content": sanitized_text})
+        if user_id is not None:
+            try:
+                from .db import add_message, touch_conversation
+                add_message(session_id, "assistant", sanitized_text)
+                touch_conversation(session_id, user_id)
+            except Exception as e:
+                print(f"[Warning] Failed to persist assistant message: {e}")
 
         yield {
             "type": "done",

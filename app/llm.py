@@ -3,6 +3,7 @@ import time
 from typing import Any
 
 import groq
+import httpx
 
 from .config import (
     CHAT_SESSION_COST_CAP_USD,
@@ -106,6 +107,23 @@ CHAT_TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_github_repos",
+            "description": "Search public GitHub repositories for open-source code implementations related to a research idea, method, or dataset. Returns repository names, descriptions, URLs, languages, stars, and last updated dates.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Research method, topic, or implementation keywords to search on GitHub",
+                    },
+                },
+                "required": ["query"],
+            },
+        },
+    },
 ]
 
 
@@ -159,8 +177,11 @@ class RateLimiter:
 
 
 def get_groq_client() -> groq.Groq | None:
-    """Initialize Groq client if API key is configured."""
+    """Initialize Groq client if API key is configured with robust timeout settings."""
     key = GROQ_API_KEY
     if not key or not key.strip():
         return None
-    return groq.Groq(api_key=key.strip())
+    return groq.Groq(
+        api_key=key.strip(),
+        timeout=httpx.Timeout(90.0, connect=25.0, read=90.0, write=60.0),
+    )

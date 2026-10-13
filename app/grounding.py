@@ -29,6 +29,10 @@ CRITICAL GROUNDING RULES:
    - Provide plain, clear, concise, and short answers.
    - Ask at most ONE clarifying question if necessary.
    - Always conclude your answer with a suggested next step for the researcher.
+
+6. GITHUB CODE REPOSITORIES:
+   - When discussing code repositories found via search_github_repos, treat them as supporting evidence of prior code implementations, NOT proof that an idea is scientifically novel or non-novel.
+   - Clearly distinguish open-source code implementation from scientific novelty. Never state an idea is novel simply because no repository was found.
 """
 
 

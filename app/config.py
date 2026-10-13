@@ -19,7 +19,7 @@ OPENALEX_MAILTO: str = os.getenv("OPENALEX_MAILTO", "researcher@example.com")
 GROQ_API_KEY: str | None = os.getenv("GROQ_API_KEY") or os.getenv("LLM_API_KEY")
 LLM_CHAT_MODEL: str = os.getenv("LLM_CHAT_MODEL", "openai/gpt-oss-20b")
 LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.3"))
-LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "600"))
+LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "1200"))
 
 # Cost and Rate Limits
 CHAT_SESSION_COST_CAP_USD: float = float(os.getenv("CHAT_SESSION_COST_CAP_USD", "1.00"))
@@ -50,3 +50,6 @@ RRF_K: int = 60
 
 # Rate limiting
 RATE_LIMIT_REQUESTS_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_RPM", "30"))
+
+# GitHub Search Relevance Threshold (minimum keyword & phrase overlap score)
+GITHUB_RELEVANCE_THRESHOLD: float = float(os.getenv("GITHUB_RELEVANCE_THRESHOLD", "2.5"))

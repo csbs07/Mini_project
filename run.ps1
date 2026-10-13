@@ -11,5 +11,5 @@ if (Test-Path ".\.venv\Scripts\python.exe") {
     Write-Host "Using system python" -ForegroundColor Yellow
 }
 
-Write-Host "Navigating to http://127.0.0.1:8000/chat in browser after launch." -ForegroundColor Cyan
-& $PythonExe -m uvicorn app.server:app --host 127.0.0.1 --port 8000 --reload
+Write-Host "Navigating to http://127.0.0.1:8001/chat in browser after launch." -ForegroundColor Cyan
+& $PythonExe -m uvicorn app.server:app --host 127.0.0.1 --port 8001 --reload

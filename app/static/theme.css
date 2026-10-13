@@ -1,0 +1,463 @@
+/* ==========================================================================
+   LitSearch Design System & Unified Neon Lime Theme Tokens
+   ========================================================================== */
+
+:root {
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.8125rem;  /* 13px */
+  --font-size-base: 0.875rem; /* 14px */
+  --font-size-md: 0.9375rem;  /* 15px */
+  --font-size-lg: 1.0625rem;  /* 17px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Border Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Layout Dimensions */
+  --sidebar-width: 440px;
+  --header-height: 64px;
+
+  /* ========================================================================
+     DARK MODE (Default Theme)
+     ======================================================================== */
+  --bg-app: #0D0F0C;                  /* Near-black charcoal */
+  --bg-surface: #161A14;              /* Dark green-gray */
+  --bg-surface-subtle: #121510;       /* Slightly deeper green-gray */
+  --bg-surface-elevated: #1C2219;     /* Elevated dark surface */
+  --bg-card: #161A14;                 /* Dark green-gray card */
+  --bg-card-hover: #1A2018;           /* Hovered card */
+  --bg-input: #0D0F0C;                /* Input background */
+
+  --border: #252B22;                  /* Thin border */
+  --border-subtle: #1E231B;           /* Subtle hairline */
+  --border-hover: #374233;            /* Hovered border */
+  --border-focus: #B8FF2C;            /* Focused border (neon lime) */
+
+  --text-primary: #F2F5EE;            /* Soft off-white */
+  --text-secondary: #C8D1C3;          /* Light grayish-green */
+  --text-muted: #9AA593;              /* Gray-green muted */
+  --text-faint: #606B5B;              /* Faint helper text */
+
+  /* Primary Neon Lime Brand */
+  --primary: #B8FF2C;                 /* Neon lime */
+  --primary-hover: #C5FF4D;           /* Slightly lighter neon lime */
+  --primary-active: #A6E820;          /* Deep neon lime */
+  --primary-text: #0D0F0C;            /* Very dark text on lime */
+  --primary-glow: rgba(184, 255, 44, 0.25);
+  --primary-subtle: rgba(184, 255, 44, 0.12);
+  --primary-border: rgba(184, 255, 44, 0.35);
+
+  /* Secondary Mint Accent */
+  --secondary: #5CFFB1;               /* Mint */
+  --secondary-text: #0D0F0C;
+  --secondary-subtle: rgba(92, 255, 177, 0.12);
+  --secondary-border: rgba(92, 255, 177, 0.3);
+
+  /* Status Colors */
+  --error: #FF5C5C;                   /* Coral red */
+  --error-bg: rgba(255, 92, 92, 0.12);
+  --error-border: rgba(255, 92, 92, 0.35);
+  --error-text: #FF7B7B;
+
+  --warning: #FFB84D;                 /* Amber */
+  --warning-bg: rgba(255, 184, 77, 0.12);
+  --warning-border: rgba(255, 184, 77, 0.35);
+  --warning-text: #FFC973;
+
+  --info: #5CD0FF;                    /* Cyan info */
+  --info-bg: rgba(92, 208, 255, 0.10);
+  --info-border: rgba(92, 208, 255, 0.30);
+  --info-text: #8BE0FF;
+
+  /* Chat Bubbles */
+  --bubble-user-bg: #B8FF2C;
+  --bubble-user-text: #0D0F0C;
+  --bubble-assistant-bg: #161A14;
+  --bubble-assistant-text: #F2F5EE;
+  --bubble-assistant-border: #252B22;
+
+  /* Shadows & Glows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.7);
+  --glow-lime: 0 0 16px rgba(184, 255, 44, 0.22);
+  --glow-lime-sm: 0 0 8px rgba(184, 255, 44, 0.20);
+  --glow-lime-lg: 0 0 24px rgba(184, 255, 44, 0.35);
+}
+
+/* ==========================================================================
+   LIGHT MODE
+   ========================================================================== */
+[data-theme="light"] {
+  --bg-app: #F6F8F2;                  /* Soft off-white */
+  --bg-surface: #FFFFFF;              /* Pure white */
+  --bg-surface-subtle: #EDF1E7;       /* Soft pale neutral */
+  --bg-surface-elevated: #FFFFFF;     /* Elevated white */
+  --bg-card: #FFFFFF;                 /* White cards */
+  --bg-card-hover: #F8FAF5;           /* Card hover */
+  --bg-input: #FFFFFF;                /* White input */
+
+  --border: #DDE3D6;                  /* Light neutral border */
+  --border-subtle: #E8ECE3;           /* Hairline */
+  --border-hover: #BCC5B3;            /* Hovered border */
+  --border-focus: #3F7A00;            /* Deep green focus */
+
+  --text-primary: #12150F;            /* Dark charcoal */
+  --text-secondary: #3D4536;          /* Charcoal neutral */
+  --text-muted: #66725F;              /* Gray-green muted */
+  --text-faint: #929E8B;              /* Faint helper text */
+
+  /* Buttons remain Neon Lime with dark text for high energy */
+  --primary: #B8FF2C;
+  --primary-hover: #A6ED1F;
+  --primary-active: #94D813;
+  --primary-text: #0D0F0C;            /* Always very dark on lime */
+  --primary-glow: rgba(63, 122, 0, 0.18);
+  --primary-subtle: rgba(184, 255, 44, 0.25);
+  --primary-border: #9EDF1F;
+
+  /* For links and small text in light mode, use deeper green for AAA contrast */
+  --accent-link: #3F7A00;             /* Deeper green for readability on white */
+  --accent-link-hover: #2F5C00;
+
+  /* Secondary Mint Accent in light mode */
+  --secondary: #22B573;
+  --secondary-text: #FFFFFF;
+  --secondary-subtle: rgba(34, 181, 115, 0.12);
+  --secondary-border: rgba(34, 181, 115, 0.35);
+
+  /* Status Colors */
+  --error: #DC2626;
+  --error-bg: #FEE2E2;
+  --error-border: #FCA5A5;
+  --error-text: #991B1B;
+
+  --warning: #D97706;
+  --warning-bg: #FEF3C7;
+  --warning-border: #FCD34D;
+  --warning-text: #92400E;
+
+  --info: #0284C7;
+  --info-bg: #E0F2FE;
+  --info-border: #BAE6FD;
+  --info-text: #0369A1;
+
+  /* Chat Bubbles */
+  --bubble-user-bg: #B8FF2C;
+  --bubble-user-text: #0D0F0C;
+  --bubble-assistant-bg: #FFFFFF;
+  --bubble-assistant-text: #12150F;
+  --bubble-assistant-border: #DDE3D6;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(18, 21, 15, 0.06);
+  --shadow-md: 0 4px 8px rgba(18, 21, 15, 0.08);
+  --shadow-lg: 0 10px 20px rgba(18, 21, 15, 0.10);
+  --shadow-xl: 0 20px 30px rgba(18, 21, 15, 0.12);
+  --glow-lime: 0 0 16px rgba(184, 255, 44, 0.4);
+  --glow-lime-sm: 0 0 8px rgba(184, 255, 44, 0.35);
+  --glow-lime-lg: 0 0 24px rgba(184, 255, 44, 0.5);
+}
+
+/* ==========================================================================
+   GLOBAL RESET & UTILITIES
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.22s ease, color 0.22s ease;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn:hover {
+  background: var(--bg-surface-elevated);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Lime Primary Button */
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-text) !important;
+  border-color: var(--primary);
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: var(--primary-text) !important;
+  box-shadow: var(--glow-lime);
+}
+
+.btn-primary:active {
+  background: var(--primary-active);
+  transform: translateY(0);
+}
+
+/* Mint / Secondary Button */
+.btn-secondary {
+  background: var(--bg-surface-subtle);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+/* Mint Action Button */
+.btn-mint {
+  background: var(--secondary-subtle);
+  border-color: var(--secondary-border);
+  color: var(--secondary);
+}
+
+.btn-mint:hover {
+  background: var(--secondary);
+  color: var(--secondary-text);
+  box-shadow: 0 0 14px rgba(92, 255, 177, 0.3);
+}
+
+/* Ghost Button */
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.btn-ghost:hover {
+  background: var(--bg-surface-subtle);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+/* Small Button */
+.btn-xs {
+  font-size: var(--font-size-xs);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  gap: 4px;
+}
+
+/* ==========================================================================
+   INPUTS & FORMS
+   ========================================================================== */
+.form-input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.form-input:hover {
+  border-color: var(--border-hover);
+}
+
+.form-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: var(--glow-lime-sm);
+}
+
+.form-input::placeholder {
+  color: var(--text-faint);
+}
+
+/* Password Toggle Wrapper */
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrap .form-input {
+  padding-right: 42px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.password-toggle-btn:hover {
+  color: var(--primary);
+  background: var(--primary-subtle);
+}
+
+/* ==========================================================================
+   SPINNERS & LOADERS
+   ========================================================================== */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(184, 255, 44, 0.2);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Skeleton loader */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-surface-elevated) 50%, var(--bg-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ==========================================================================
+   BADGES & PILLS
+   ========================================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.badge-lime {
+  background: var(--primary-subtle);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+}
+
+[data-theme="light"] .badge-lime {
+  color: #3F7A00;
+  border-color: rgba(63, 122, 0, 0.3);
+}
+
+.badge-mint {
+  background: var(--secondary-subtle);
+  color: var(--secondary);
+  border: 1px solid var(--secondary-border);
+}
+
+.badge-muted {
+  background: var(--bg-surface-subtle);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}

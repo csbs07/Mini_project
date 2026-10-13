@@ -1,8 +1,8 @@
-"""Integration test against live running server on http://127.0.0.1:8000."""
+"""Integration test against live running server on http://127.0.0.1:8001."""
 import requests
 import json
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8001"
 
 def test_live_workflow():
     print("Testing GET /chat...")
@@ -23,6 +23,15 @@ def test_live_workflow():
     assert data["count"] > 0
     p1 = data["papers"][0]
     print(f"  -> Found {data['count']} papers. P1: {p1['label']} - {p1['title'][:60]}")
+
+    print("\nTesting POST /api/github/search...")
+    gh_payload = {"query": "Diffusion models for single-cell RNA sequencing", "session_id": sess_id, "max_results": 5}
+    r_gh = requests.post(f"{BASE_URL}/api/github/search", json=gh_payload)
+    assert r_gh.status_code == 200
+    gh_data = r_gh.json()
+    assert "repositories" in gh_data
+    assert "disclaimer" in gh_data
+    print(f"  -> GitHub search returned {gh_data.get('count')} repos. Rate limited: {gh_data.get('rate_limited')}")
 
     print("\nTesting POST /api/papers/read...")
     read_payload = {"session_id": sess_id, "paper_id": p1["label"]}
